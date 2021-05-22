@@ -84,9 +84,6 @@ public interface UserDao {
                     "select",
                     "uid, name, age, sex. email",
                     "from user",
-//            "order by age desc",
-//            "limit 10",
-//            "offset 2"
     })
     @Results({
             @Result(column="uid", property="uid", jdbcType=JdbcType.VARCHAR, id=true),
@@ -96,7 +93,6 @@ public interface UserDao {
             @Result(column="email", property="email", jdbcType=JdbcType.VARCHAR)
     })
     List<User> selectAll();
-
 
 
     @Select(
@@ -111,32 +107,50 @@ public interface UserDao {
 
 
     @Select({
-                    "select",
-                    "uid, name, age, sex, email, password",
-                    "from user",
-                    "where email = #{email, jdbcType=VARCHAR}"
+                    "SELECT",
+                    "name, email, uid, age, sex, password",
+                    "FROM user",
+                    "WHERE email = #{email, jdbcType=VARCHAR}"
     })
-    @Results({
-            @Result(column="uid", property="uid", jdbcType=JdbcType.VARCHAR, id=true),
+        @Results({
             @Result(column="name", property="name", jdbcType=JdbcType.VARCHAR),
+            @Result(column="email", property="email", jdbcType=JdbcType.VARCHAR),
+            @Result(column="uid", property="uid", jdbcType=JdbcType.INTEGER, id=true),
             @Result(column="age", property="age", jdbcType=JdbcType.INTEGER),
             @Result(column="sex", property="sex", jdbcType=JdbcType.INTEGER),
-            @Result(column="email", property="email", jdbcType=JdbcType.VARCHAR),
             @Result(column="password", property="password", jdbcType=JdbcType.VARCHAR)
     })
     User selectByEmail(String email);
 
-    @Update({
-            "update user",
-            "set following = #{followingIds,jdbcType=LONGVARCHAR}",
-            "where uid = #{uid, jdbcType=INTEGER}"
+    @Insert({
+            "INSERT INTO follow_relations",
+            "(followed_id, follower_id)",
+            "VALUES (#{followedId, jdbcType=INTEGER}, #{followerId, jdbcType=INTEGER})"
     })
-    int addFollowing(int uid, List<Integer> followingIds);
+    int addFollower(int followedId, int followerId);
 
-    @Update({
-            "update user",
-            "set followed = #{followedIds,jdbcType=LONGVARCHAR}",
-            "where uid = #{uid, jdbcType=INTEGER}"
+    @Select({
+            "SELECT",
+            "follower_id",
+            "FROM follow_relations",
+            "WHERE followed_id = #{uid, jdbcType=INTEGER}"
     })
-    int addFollower(int uid, List<Integer> followerIds);
+    List<Integer> selectFollowersById(int uid);
+
+    @Select({
+            "SELECT",
+            "followed_id",
+            "FROM follow_relations",
+            "WHERE follower_id = {uid, jdbcType=INTEGER}"
+    })
+    List<Integer> selectFollowingsById(int uid);
+
+    @Delete({
+            "DELETE FROM follow_relations",
+            "WHERE",
+            "followed_id = #{followedId, jdbcType=INTEGER}",
+            "AND",
+            "follower_id = #{followerId, jdbcType=INTEGER}"
+    })
+    int removeFollowingRelation(int followedId, int followerId);
 }

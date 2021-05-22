@@ -9,13 +9,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
+import org.springframework.dao.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
-/**
- * handle person info CRUD
- *
- */
+
 @RestController
 @RequestMapping("/api/v1/post")
 public class PostController {
@@ -30,8 +29,8 @@ public class PostController {
 
     @PostMapping()
     @RequireToken
-    public JsonResult addPost(@JsonProperty("uid") Integer uid, @JsonProperty("text") String text, List<MultipartFile> photos) {
-        JsonResult result;
+    public JsonResult<?> addPost(@JsonProperty("uid") Integer uid, @JsonProperty("text") String text, List<MultipartFile> photos) {
+        JsonResult<?> result;
         boolean isAddSuccess = false;
         try {
             if (photos != null && photos.size() > 0) { // 如果用户上传了图片
@@ -40,23 +39,103 @@ public class PostController {
             } else { // 用户没有上传图片
                 isAddSuccess = postService.addPost(uid, text);
             }
+            return isAddSuccess ? JsonResult.success() : JsonResult.failure(200001, "post upload failed");
+
         }
         catch (Exception exception) {
-            System.err.println(exception);
-        }
-        finally {
-            return isAddSuccess ? new JsonResult(true) : new JsonResult(200001, "post upload failed");
+            System.err.println(exception.getMessage());
+            return JsonResult.unknownFailure();
         }
     }
 
-    @GetMapping()
+    @PostMapping("/like/{postId}")
     @RequireToken
-    public JsonResult getPost(Integer postId) {
+    public JsonResult<?> likePost(HttpServletRequest request, HttpServletResponse response, @PathVariable("postId") Integer postId) {
+        int uid = (Integer) request.getAttribute("logged_uid");
+        JsonResult<?> result;
+        try {
+            if (postId == null) {
+                throw new Exception("illegal query parameter");
+            }
+            if (postService.likeOrUnlike(true, uid, postId)) {
+                return JsonResult.success();
+            }
+            else return JsonResult.unknownFailure();
+        }
+        catch (Exception exception) {
+            if (exception.getClass() == DuplicateKeyException.class) {
+                return JsonResult.failure(200003, "aleady liked this post");
+            }
+            return JsonResult.failure(200009, exception.getMessage());
+        }
+    }
+
+    @DeleteMapping("/like/{postId}")
+    @RequireToken
+    public JsonResult<?> UnlikePost(HttpServletRequest request, HttpServletResponse response, @PathVariable("postId") Integer postId) {
+        int uid = (Integer) request.getAttribute("logged_uid");
+        JsonResult<?> result;
+        try {
+            if (postId == null) {
+                throw new Exception("illegal query parameter");
+            }
+            if (postService.likeOrUnlike(false, uid, postId)) {
+                return JsonResult.success();
+            }
+            else return JsonResult.unknownFailure();
+        }
+        catch (Exception exception) {
+            return JsonResult.failure(200003, exception.getMessage());
+        }
+    }
+
+    @PostMapping("/comment/{postId}")
+    @RequireToken
+    public JsonResult<?> addComment(HttpServletRequest request, HttpServletResponse response, @PathVariable("postId") Integer postId, String comment) {
+        int uid = (Integer) request.getAttribute("logged_uid");
+        JsonResult<?> result;
+        try {
+            if (postId == null || comment == null) {
+                throw new Exception("illegal query parameter");
+            }
+            if (postService.addComment(uid, postId, comment)) {
+                return JsonResult.success();
+            }
+            else return JsonResult.unknownFailure();
+        }
+        catch (Exception exception) {
+            return JsonResult.failure(200003, exception.getMessage());
+        }
+    }
+
+    @DeleteMapping("/comment/{postId}/{commentId}")
+    @RequireToken
+    public JsonResult<?> removeComment(HttpServletRequest request, HttpServletResponse response, @PathVariable("commentId") Integer commentId) {
+        int uid = (Integer) request.getAttribute("logged_uid");
+        JsonResult<?> result;
+        try {
+            if (commentId == null) {
+                throw new Exception("illegal query parameter");
+            }
+            if (postService.deleteComment(commentId, uid)) {
+                return JsonResult.success();
+            }
+            else return JsonResult.unknownFailure();
+        }
+        catch (Exception exception) {
+            return JsonResult.failure(200003, exception.getMessage());
+        }
+    }
+
+
+    @GetMapping("/{postId}")
+    @RequireToken
+    public JsonResult<?> getPost(@PathVariable("postId") int postId) {
         PostWithBLOBs post = postService.getPost(postId);
         JsonResult<PostWithBLOBs> result;
         if (post != null) {
-            return new JsonResult<>(post);
+            return JsonResult.successWithData(post);
         }
-        return new JsonResult<>(200002, "no post found");
+        return JsonResult.failure(200002, "no post found");
     }
 }

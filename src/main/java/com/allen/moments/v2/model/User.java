@@ -13,7 +13,7 @@ public class User {
     private List<Integer> followers = new ArrayList<>();
     private List<Integer> followings = new ArrayList<>();
 
-    public User(String name, String email, Integer uid, Integer age, Integer sex, String password ) {
+    public User(String name, String email, Integer uid, Integer age, Integer sex, String password) {
         this.name = name;
         this.age = age;
         this.password = password;

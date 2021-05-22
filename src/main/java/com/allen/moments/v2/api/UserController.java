@@ -10,6 +10,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
@@ -22,12 +23,12 @@ import java.util.List;
 public class UserController {
     private final UserService userService;
     @Autowired
-    public UserController(UserService userService, RedisTemplate redisTemplate) {
+    public UserController(UserService userService, RedisTemplate<String, Object> redisTemplate) {
         this.userService = userService;
     }
 
     @PostMapping()
-    public JsonResult addUser(@JsonProperty("name") String name, @JsonProperty String email, @JsonProperty("sex") Integer sex, @JsonProperty("age") Integer age, @JsonProperty("password") String password) {
+    public JsonResult<?> addUser(@JsonProperty("name") String name, @JsonProperty String email, @JsonProperty("sex") Integer sex, @JsonProperty("age") Integer age, @JsonProperty("password") String password) {
         return userService.addUser(email, name, sex, age, password);
     }
 
@@ -36,8 +37,8 @@ public class UserController {
         return userService.getUser(uid);
     }
 
-    @PostMapping("change_password")
-    public String setNewPassword(@JsonProperty("uid") int uid, @JsonProperty("old_passwd") String oldPassword, @JsonProperty("new_passwd") String newPassword) {
+    @PostMapping("password")
+    public String setNewPassword(int uid, @RequestParam("old_passwd") String oldPassword, @RequestParam("new_passwd") String newPassword) {
         boolean isUpdateSuccess = userService.setNewPassword(uid, oldPassword, newPassword);
         return isUpdateSuccess ? "success" : "failure";
     }
@@ -47,10 +48,27 @@ public class UserController {
         return userService.getAllUsers();
     }
 
-    @GetMapping("/follow")
+    @PostMapping("/follow")
     @RequireToken
-    public List<User> follow() {
-        return userService.getAllUsers();
+    public JsonResult<?> follow(HttpServletRequest request, @RequestParam("uid_to_follow") Integer uidToFollow) {
+        int uidOfFollowed = (int) request.getAttribute("logged_uid");
+        return userService.follow(uidOfFollowed, uidToFollow);
+    }
+
+    @GetMapping("/{id}/followers")
+    public JsonResult<?> getFollowers(@PathVariable("id") int uid) {
+        return userService.getFollower(uid);
+    }
+
+    @GetMapping("/{id}/followings")
+    public JsonResult<?> getFollowings(@PathVariable("id") int uid) {
+        return userService.getFollowing(uid);
+    }
+
+    @DeleteMapping("/unfollow/{id}")
+    public JsonResult<?> unfollow(HttpServletRequest request, @PathVariable("id") int followedId) {
+        int followerId = (int) request.getAttribute("logged_uid");
+        return userService.unfollow(followedId, followerId);
     }
 
 //    @GetMapping("/test")

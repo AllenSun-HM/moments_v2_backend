@@ -32,7 +32,7 @@ public class PostService {
             Date timeCreated = new Date();
             Post post = new Post(text, uid, timeCreated);
             postDao.insertSelective(post);
-            redis.set("post:" + String.valueOf(postId), post);
+            redis.set("post:" + postId, post);
             return true;
         }
         catch (RuntimeException exception) {
@@ -42,10 +42,7 @@ public class PostService {
 
     /**
      * insert post with photo(s)
-     * @param uid
-     * @param text
-     * @param photoUrls
-     * @return
+     * @return whether the operation success or not
      */
     public boolean addPostWithPhotos(int uid, String text, List<String> photoUrls) {
         Date timeCreated = new Date();
@@ -53,7 +50,7 @@ public class PostService {
         try {
             PostWithBLOBs post = new PostWithBLOBs(text, uid, timeCreated, photoUrls);
             postDao.insertSelective(post);
-            redis.set("post" + String.valueOf(postId), post);
+            redis.set("post" + postId, post);
             return true;
         }
         catch (RuntimeException exception) {
@@ -63,14 +60,13 @@ public class PostService {
 
     public PostWithBLOBs getPost(int postId) {
         try {
-            PostWithBLOBs post = (PostWithBLOBs) redis.get("post:" + String.valueOf(postId));
+            PostWithBLOBs post = (PostWithBLOBs) redis.get("post:" + (postId));
             if (post != null) {
                 return post;
             }
             return postDao.selectByPrimaryKey(postId);
         }
         catch (Exception e) {
-            System.err.println(e);
             return null;
         }
     }
@@ -91,26 +87,35 @@ public class PostService {
 
     /**
      * like a post or unlike a post
-     * @param isLike
-     * @param uid
-     * @param postId
      * @return returns whether the operation succeeded or not
      */
     public boolean likeOrUnlike(boolean isLike, int uid, int postId) {
-        if (isLike && postDao.unLikeAPost()) {
-            redis.sSet("post:likes:" + String.valueOf(postId), uid);
+        if (isLike && postDao.insertLikeRecord(uid, postId) == 1) {
+            redis.sSet("post:likes:" + (postId), uid);
             return true;
         }
-        else if (!isLike && postDao.likeAPost()) {
-            redis.setRemove("post:likes:" + String.valueOf(postId), uid);
+        else if (!isLike && postDao.removeLikeRecord(uid, postId) == 1) {
+            redis.setRemove("post:likes:" + (postId), uid);
             return true;
         }
         return false;
     }
 
-    public boolean addOrDeleteComment(boolean isAddComment, int postId, String comment) {
-        return true;
+    public boolean addComment(int commentedBy, int postId, String comment) {
+        return postDao.insertCommentRecord(postId, comment, commentedBy) == 1;
     }
+
+    public boolean deleteComment(int commentId, int uid) throws Exception {
+        switch (postDao.removeCommentRecord(commentId, uid)) {
+            case 1:
+                return true;
+            case 0:
+                throw new Exception("illegal operation of comment deletion");
+            default:
+                return false;
+        }
+    }
+
     private synchronized int getPostId() {
         return ++maxPostId;
     }

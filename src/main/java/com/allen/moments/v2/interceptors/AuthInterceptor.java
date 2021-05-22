@@ -46,20 +46,17 @@ public class AuthInterceptor implements HandlerInterceptor {
                         throw new RuntimeException("no token found, login is needed");
                     }
                     int uid;
-                    Boolean isLogged;
-                    try {
-                        uid = (Integer.parseInt(com.auth0.jwt.JWT.decode(token).getAudience().get(0)));
-                        isLogged = redisUtil.getBit("loggedUsers", uid - 10000);
-                    } catch (JWTDecodeException j) {
-                        throw new RuntimeException("502");
-                    }
+                    boolean isLogged;
+                    uid = (Integer.parseInt(com.auth0.jwt.JWT.decode(token).getAudience().get(0)));
+                    isLogged = redisUtil.getBit("loggedUsers", uid - 10000); // use redis as the session manager
+                    request.setAttribute("logged_uid", uid);
                     if (!isLogged) {
                         throw new RuntimeException("user not found, please login again");
                     }
                 }
                 catch (Exception exception) {
                     ObjectMapper mapper = new ObjectMapper();
-                    JsonResult jsonResult = new JsonResult(10000,exception.getMessage());// customised pojo for error json message
+                    JsonResult<?> jsonResult = JsonResult.failure(10000,exception.getMessage());// customised pojo for error json message
                     response.setContentType("application/json");
                     response.setCharacterEncoding("utf-8");
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

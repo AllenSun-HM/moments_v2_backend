@@ -7,8 +7,16 @@ import com.allen.moments.v2.utils.JsonResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.Set;
 
 
+/**
+ * service layer for userinfo-related operations
+ * basic logic:
+     * query in redis(cache layer) first,
+     * if found, return;
+     * if not found. query in DB layer and cache the result in redis
+ */
 @Service
 public class UserService {
     private final UserDao userDao;
@@ -26,21 +34,19 @@ public class UserService {
         maxUid = this.userDao.getMaxUid();
     }
 
-    public JsonResult addUser(String email, String name, Integer sex, Integer age, String password) {
+    public JsonResult<?> addUser(String email, String name, Integer sex, Integer age, String password) {
         User newUser = new User(name, email, maxUid + 1, age, sex, password);
-        boolean isAddSuccess = false;
         try {
             userDao.insert(newUser);
-            isAddSuccess = true;
             maxUid += 1;
+            return JsonResult.success();
         }
         catch (RuntimeException exception) {
             if (exception.getClass() == org.springframework.dao.DuplicateKeyException.class) {
-                return new JsonResult(10003, "duplicate entry");
+                return JsonResult.failure(10003, "user already registered");
             }
-            return new JsonResult(false);
+            return JsonResult.unknownFailure();
         }
-        return new JsonResult(true);
     }
 
     public boolean setNewPassword(int uid, String oldPassword, String newPassword) {
@@ -52,13 +58,6 @@ public class UserService {
         return false;
     }
 
-    /**
-     * query in cache layer first,
-     * if found, return;
-     * if not found. query in DB layer and cache the result in redis
-     * @param uid
-     * @return
-     */
     public User getUser(int uid) {
             User cachedUser = (User) redis.hashGet("allUsers", String.valueOf(uid));
             if (cachedUser != null) {
@@ -82,65 +81,66 @@ public class UserService {
             return userDao.selectAll();
         }
         catch (Exception e) {
-            System.err.println(e.toString());
+            System.err.println(e.getMessage());
             return null;
         }
     }
 
-    public JsonResult getFollower(int uid) {
+    public JsonResult<?> getFollower(int uid) {
+            String redisKey = "user:" + uid + ":follower";
+            Set<Object> followersCached = redis.sGet(redisKey);
+            if (followersCached != null) {
+                return JsonResult.successWithData(followersCached);
+            }
+            List<Integer> followersInDB = userDao.selectFollowersById(uid);
+            if (followersInDB != null) {
+                return JsonResult.successWithData(followersInDB);
+            }
+            return JsonResult.success();
+        }
+
+
+    public JsonResult<?> getFollowing(int uid) {
+            String redisKey = "user:" + uid + ":following";
+            Set<Object> followingsCached = redis.sGet(redisKey);
+            if (followingsCached != null) {
+                return JsonResult.successWithData(followingsCached);
+            }
+            List<Integer> followingsInDB = userDao.selectFollowingsById(uid);
+            if (followingsInDB != null) {
+                return JsonResult.successWithData(followingsInDB);
+            }
+            return JsonResult.success();
+    }
+
+    public JsonResult<?> follow(int followedId, int followerId) {
         try {
-            String userRedisKey = "user:" + String.valueOf(uid);
-            User userInRedis = (User) redis.get(userRedisKey);
-            if (userInRedis != null) {
-                return new JsonResult(userInRedis.getFollowers());
-            }
-            User userInDB = userDao.selectByPrimaryKey(uid);
-            if (userInDB != null) {
-                return new JsonResult(userInDB.getFollowers());
-            }
-            return new JsonResult(10002, "user not found");
+            userDao.addFollower(followedId, followerId);
+
+            String followedRedisKey = "user:" + followedId + ":follower";
+            redis.sSet(followedRedisKey, followedId);
+
+            String followerRedisKey = "user:"+ followerId + ":following";
+            redis.sSet(followerRedisKey, followedId);
+
+            return JsonResult.success();
         }
         catch (RuntimeException exception) {
-            return new JsonResult(false);
+            System.out.println(exception.getMessage());
+              return JsonResult.unknownFailure();
         }
     }
 
-    public JsonResult getFollowing(int uid) {
+    public JsonResult<?> unfollow(int followedId, int followerId) {
         try {
-            String userRedisKey = "user:" + String.valueOf(uid);
-            User userInRedis = (User) redis.get(userRedisKey);
-            if (userInRedis != null) {
-                return new JsonResult(userInRedis.getFollowings());
+            int rowsAffected = userDao.removeFollowingRelation(followedId, followerId);
+            if (rowsAffected == 0) {
+                throw new Exception("no following relationship exists");
             }
-            User userInDB = userDao.selectByPrimaryKey(uid);
-            if (userInDB != null) {
-                return new JsonResult(userInDB.getFollowings());
-            }
-            return new JsonResult(10002, "user not found");
+            return JsonResult.success();
         }
-        catch (RuntimeException exception) {
-            return new JsonResult(false);
-        }
-    }
-
-    public JsonResult Follow(int followerId, int followedId) {
-        try {
-            User follower = userDao.selectByPrimaryKey(followerId);
-            follower.addFollowing(followedId);
-            String followerRedisKey = "user:"+String.valueOf(followerId);
-            userDao.addFollowing(followerId, follower.getFollowings());
-            redis.set(followerRedisKey, follower);
-
-            User followed = userDao.selectByPrimaryKey(followedId);
-            followed.addFollowing(followedId);
-            String followedRedisKey = "user:"+String.valueOf(followerId);
-            userDao.addFollower(followedId, followed.getFollowers());
-            redis.set(followerRedisKey, followed);
-
-            return new JsonResult(true);
-        }
-        catch (RuntimeException exception) {
-              return new JsonResult(false);
+        catch(Exception exception) {
+            return JsonResult.failure(30001, exception.getMessage());
         }
     }
 }

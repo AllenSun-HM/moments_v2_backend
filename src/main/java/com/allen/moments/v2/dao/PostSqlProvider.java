@@ -28,11 +28,7 @@ public class PostSqlProvider {
         if (record.getJsonPhotos() != null) {
             sql.VALUES("photo", "#{photo,jdbcType=LONGVARCHAR}");
         }
-        
-        if (record.getJsonLikes() != null) {
-            sql.VALUES("like", "#{like,jdbcType=LONGVARCHAR}");
-        }
-        
+
         return sql.toString();
     }
 
@@ -55,11 +51,7 @@ public class PostSqlProvider {
         if (record.getJsonPhotos() != null) {
             sql.SET("photo = #{photo,jdbcType=LONGVARCHAR}");
         }
-        
-        if (record.getJsonLikes() != null) {
-            sql.SET("like = #{like,jdbcType=LONGVARCHAR}");
-        }
-        
+
         sql.WHERE("postid = #{postid,jdbcType=INTEGER}");
         return sql.toString();
     }

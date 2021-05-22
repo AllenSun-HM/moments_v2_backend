@@ -26,23 +26,20 @@ public class AuthController {
 
     @PassToken
     @PostMapping("")
-    public JsonResult<HashMap> login(HttpServletRequest request, @JsonProperty("email") String email, @JsonProperty("password") String password) {
+    public JsonResult<?> login(HttpServletRequest request, @JsonProperty("email") String email, @JsonProperty("password") String password) {
         String token = request.getHeader("token");
         if (token != null) {
-            JsonResult jsonResult = new JsonResult<>(100002, "用户已经登陆，无需重复登录");
-            return jsonResult;
+            return JsonResult.failure(100002, "用户已经登陆，无需重复登录");
         }
         try {
             token = authService.login(email, password);
         } catch (RuntimeException exception) {
             exception.printStackTrace();
-            JsonResult jsonResult = new JsonResult<>(100003, exception.getMessage());
-            return jsonResult;
+            return JsonResult.failure(100003, exception.getMessage());
         }
         HashMap<String, String> data = new HashMap<>();
         data.put("token", token);
-        JsonResult<HashMap> jsonResult = new JsonResult(data);
-        return jsonResult;
+        return JsonResult.successWithData(data);
     }
 
 }
