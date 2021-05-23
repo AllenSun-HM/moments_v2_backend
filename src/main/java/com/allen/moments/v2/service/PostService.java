@@ -4,6 +4,7 @@ import com.allen.moments.v2.dao.PostDao;
 import com.allen.moments.v2.model.Post;
 import com.allen.moments.v2.model.PostWithBLOBs;
 import com.allen.moments.v2.redis.RedisUtil;
+import com.allen.moments.v2.utils.ThreadPoolManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,17 +28,12 @@ public class PostService {
     }
 
     public boolean addPost(int uid, String text) {
-        try {
             int postId = getPostId();
             Date timeCreated = new Date();
             Post post = new Post(text, uid, timeCreated);
-            postDao.insertSelective(post);
+            int rowsAffected = postDao.insertSelective(post);
             redis.set("post:" + postId, post);
-            return true;
-        }
-        catch (RuntimeException exception) {
-            return false;
-        }
+            return rowsAffected == 1;
     }
 
     /**
@@ -47,42 +43,22 @@ public class PostService {
     public boolean addPostWithPhotos(int uid, String text, List<String> photoUrls) {
         Date timeCreated = new Date();
         int postId = getPostId();
-        try {
             PostWithBLOBs post = new PostWithBLOBs(text, uid, timeCreated, photoUrls);
-            postDao.insertSelective(post);
-            redis.set("post" + postId, post);
-            return true;
-        }
-        catch (RuntimeException exception) {
-            return false;
-        }
+            int rowsAffected = postDao.insertSelective(post);
+            redis.set("post:" + postId, post);
+            return rowsAffected == 1;
     }
 
     public PostWithBLOBs getPost(int postId) {
-        try {
             PostWithBLOBs post = (PostWithBLOBs) redis.get("post:" + (postId));
             if (post != null) {
                 return post;
             }
             return postDao.selectByPrimaryKey(postId);
-        }
-        catch (Exception e) {
-            return null;
-        }
     }
 
     public List<PostWithBLOBs> getAllPosts() {
-        try {
-//            List<PostWithBLOBs> allPosts = (List<PostWithBLOBs>)(Object)redis.hashGetAll("allPosts").values();
-//            if (allPosts.size() != 0) {
-//                return allPosts;
-//            }
-            return postDao.selectAllPosts();
-        }
-        catch (Exception e) {
-            System.err.println(e.getMessage());
-            return null;
-        }
+        return postDao.selectAllPosts();
     }
 
     /**
@@ -91,11 +67,21 @@ public class PostService {
      */
     public boolean likeOrUnlike(boolean isLike, int uid, int postId) {
         if (isLike && postDao.insertLikeRecord(uid, postId) == 1) {
-            redis.sSet("post:likes:" + (postId), uid);
+            ThreadPoolManager.getInstance().execute(new Runnable() {
+                @Override
+                public void run() {
+                    redis.sSet("post:likes:" + (postId), uid);
+                }
+            });
             return true;
         }
         else if (!isLike && postDao.removeLikeRecord(uid, postId) == 1) {
-            redis.setRemove("post:likes:" + (postId), uid);
+            ThreadPoolManager.getInstance().execute(new Runnable() {
+                @Override
+                public void run() {
+                    redis.setRemove("post:likes:" + (postId), uid);
+                }
+            });
             return true;
         }
         return false;

@@ -29,8 +29,8 @@ public class AuthService {
             if (!password.equals(user.getPassword())) {
                throw new RuntimeException("Password incorrect");
             }
-            String token = this.jwtUtil.getToken(user);
-            redisUtil.setBit("loggedUsers", user.getUid() - 10000, true);
-        return token;
+            return this.jwtUtil.getToken(user);
+//            redisUtil.setBit("loggedUsers", user.getUid() - 10000, true);
+
     }
 }

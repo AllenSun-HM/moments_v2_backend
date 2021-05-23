@@ -4,7 +4,6 @@ import com.allen.moments.v2.redis.RedisUtil;
 import com.allen.moments.v2.utils.JsonResult;
 import com.allen.moments.v2.utils.annotations.PassToken;
 import com.allen.moments.v2.utils.annotations.RequireToken;
-import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -29,15 +28,21 @@ public class AuthInterceptor implements HandlerInterceptor {
         HandlerMethod handlerMethod = (HandlerMethod) object;
         Method method = handlerMethod.getMethod();
         //检查是否有passtoken注释，有则跳过认证
-        if (method.isAnnotationPresent(PassToken.class)) {
+        if (method.isAnnotationPresent(PassToken.class) ) {
             PassToken passToken = method.getAnnotation(PassToken.class);
+            if (passToken == null) {
+                passToken = method.getClass().getAnnotation(PassToken.class);
+            }
             if (passToken.isTokenNeedless()) {
                 return true;
             }
         }
         //检查有没有需要用户权限的注解
-        if (method.isAnnotationPresent(RequireToken.class)) {
+        if (method.isAnnotationPresent(RequireToken.class) || method.getClass().isAnnotationPresent(RequireToken.class)) {
             RequireToken userLoginToken = method.getAnnotation(RequireToken.class);
+            if (userLoginToken == null){
+                userLoginToken = method.getClass().getAnnotation(RequireToken.class);
+            }
             if (userLoginToken.isTokenNeeded()) {
                 // 执行认证
                 try {
@@ -48,15 +53,16 @@ public class AuthInterceptor implements HandlerInterceptor {
                     int uid;
                     boolean isLogged;
                     uid = (Integer.parseInt(com.auth0.jwt.JWT.decode(token).getAudience().get(0)));
-                    isLogged = redisUtil.getBit("loggedUsers", uid - 10000); // use redis as the session manager
+//                    isLogged = redisUtil.getBit("loggedUsers", uid - 10000); // use redis as the session manager
+//                    if (!isLogged) {
+//                        throw new RuntimeException("user not found, please login again");
+//                    }
                     request.setAttribute("logged_uid", uid);
-                    if (!isLogged) {
-                        throw new RuntimeException("user not found, please login again");
-                    }
                 }
                 catch (Exception exception) {
                     ObjectMapper mapper = new ObjectMapper();
-                    JsonResult<?> jsonResult = JsonResult.failure(10000,exception.getMessage());// customised pojo for error json message
+                    System.err.println(exception.getMessage());
+                    JsonResult<?> jsonResult = JsonResult.failure(10000, "user not logged");// customised pojo for error json message
                     response.setContentType("application/json");
                     response.setCharacterEncoding("utf-8");
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

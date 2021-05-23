@@ -1,6 +1,7 @@
 package com.allen.moments.v2.model;
 
-import org.json.simple.JSONArray;
+
+import com.alibaba.fastjson.JSONObject;
 
 import java.util.Date;
 import java.util.List;
@@ -36,14 +37,14 @@ public class PostWithBLOBs extends Post {
 
     public PostWithBLOBs(String text, Integer postedby, Date timecreated, List<String> photos) {
         super(text, postedby, timecreated);
-        String jsonedPhotos = JSONArray.toJSONString(photos);
+        String jsonedPhotos = JSONObject.toJSONString(photos);
         this.photos = photos;
         this.jsonPhotos = jsonedPhotos;
     }
 
     public void setPhoto(String photo) {
         this.photos = photos == null ? null : photos;
-        this.jsonPhotos = JSONArray.toJSONString(photos);
+        this.jsonPhotos = JSONObject.toJSONString(photos);
     }
 
     public List<Integer> getLike() {

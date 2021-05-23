@@ -13,11 +13,11 @@ public class JwtUtil {
     public static final String AUTH_HEADER_KEY = "Authorization";
     public static final String TOKEN_PREFIX = "Bearer ";
     public String getToken(User user) {
-        int[] a = new int[5];
+
         String token = "";
-        Arrays.copyOfRange(a, 0, 3);
-        token = com.auth0.jwt.JWT.create().withAudience(String.valueOf(user.getUid()))
+        token = com.auth0.jwt.JWT.create().withAudience(String.valueOf(user.getUid())).withExpiresAt(new Date())
                 .sign(Algorithm.HMAC256(user.getPassword()));
         return token;
     }
 }
+

@@ -28,22 +28,26 @@ public class UserController {
     }
 
     @PostMapping()
-    public JsonResult<?> addUser(@JsonProperty("name") String name, @JsonProperty String email, @JsonProperty("sex") Integer sex, @JsonProperty("age") Integer age, @JsonProperty("password") String password) {
+    @RequireToken
+    public JsonResult<?> addUser(@JsonProperty("name") String name, @JsonProperty String email, @JsonProperty("sex") Integer sex, @JsonProperty("age") Integer age, @JsonProperty("password") String password) throws Exception {
         return userService.addUser(email, name, sex, age, password);
     }
 
     @GetMapping("/{id}")
+    @RequireToken
     public User getUser(@PathVariable("id") int uid) {
         return userService.getUser(uid);
     }
 
     @PostMapping("password")
+    @RequireToken
     public String setNewPassword(int uid, @RequestParam("old_passwd") String oldPassword, @RequestParam("new_passwd") String newPassword) {
         boolean isUpdateSuccess = userService.setNewPassword(uid, oldPassword, newPassword);
         return isUpdateSuccess ? "success" : "failure";
     }
 
     @GetMapping("/get_all")
+    @RequireToken
     public List<User> showAllUsers() {
         return userService.getAllUsers();
     }
@@ -56,23 +60,21 @@ public class UserController {
     }
 
     @GetMapping("/{id}/followers")
+    @RequireToken
     public JsonResult<?> getFollowers(@PathVariable("id") int uid) {
         return userService.getFollower(uid);
     }
 
     @GetMapping("/{id}/followings")
+    @RequireToken
     public JsonResult<?> getFollowings(@PathVariable("id") int uid) {
         return userService.getFollowing(uid);
     }
 
     @DeleteMapping("/unfollow/{id}")
-    public JsonResult<?> unfollow(HttpServletRequest request, @PathVariable("id") int followedId) {
+    @RequireToken
+    public JsonResult<?> unfollow(HttpServletRequest request, @PathVariable("id") int followedId) throws Exception {
         int followerId = (int) request.getAttribute("logged_uid");
         return userService.unfollow(followedId, followerId);
     }
-
-//    @GetMapping("/test")
-//    public String test() {
-//        return "a";
-//    }
 }

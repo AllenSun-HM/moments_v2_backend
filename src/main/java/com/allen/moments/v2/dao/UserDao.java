@@ -14,8 +14,7 @@ public interface UserDao {
                     "delete from user",
                     "where uid = #{uid,jdbcType=INTEGER}"
     })
-    int deleteByPrimaryKey(Integer uid);
-
+    int deleteByUid(Integer uid);
 
 
     @Insert({
@@ -32,7 +31,6 @@ public interface UserDao {
     int insertSelective(User record);
 
 
-
     @Select({
                     "select",
                     "uid, name, age, sex, password, email",
@@ -47,10 +45,20 @@ public interface UserDao {
             @Result(column="password", property="password", jdbcType=JdbcType.VARCHAR),
             @Result(column="email", property="email", jdbcType=JdbcType.VARCHAR)
     })
-    User selectByPrimaryKey(Integer uid);
+    User selectByUid(Integer uid);
 
 
-
+    @Select({
+            "SELECT",
+            "follow_relations.followed_id, user.name, user.age, user.sex, user.password, user.email",
+            "FROM follow_relations",
+            "LEFT JOIN user",
+            "ON follow_relations.followed_id = user.uid",
+            "GROUP BY follow_relations.followed_id",
+            "ORDER BY COUNT(follow_relations.followed_id)",
+            "LIMIT #{start, jdbcType=INTEGER)} #{limit, jdbcType=INTEGER)}"
+    })
+    List<User> selectUsersOrderByFollowersCounts(int start, int limit);
 
     @UpdateProvider(type=UserSqlProvider.class, method="updateByPrimaryKeySelective")
     int updateByPrimaryKeySelective(User record);
@@ -123,34 +131,34 @@ public interface UserDao {
     User selectByEmail(String email);
 
     @Insert({
-            "INSERT INTO follow_relations",
-            "(followed_id, follower_id)",
-            "VALUES (#{followedId, jdbcType=INTEGER}, #{followerId, jdbcType=INTEGER})"
+                    "INSERT INTO follow_relations",
+                    "(followed_id, follower_id)",
+                    "VALUES (#{followedId, jdbcType=INTEGER}, #{followerId, jdbcType=INTEGER})"
     })
     int addFollower(int followedId, int followerId);
 
     @Select({
-            "SELECT",
-            "follower_id",
-            "FROM follow_relations",
-            "WHERE followed_id = #{uid, jdbcType=INTEGER}"
+                    "SELECT",
+                    "follower_id",
+                    "FROM follow_relations",
+                    "WHERE followed_id = #{uid, jdbcType=INTEGER}"
     })
     List<Integer> selectFollowersById(int uid);
 
     @Select({
-            "SELECT",
-            "followed_id",
-            "FROM follow_relations",
-            "WHERE follower_id = {uid, jdbcType=INTEGER}"
+                    "SELECT",
+                    "followed_id",
+                    "FROM follow_relations",
+                    "WHERE follower_id = {uid, jdbcType=INTEGER}"
     })
     List<Integer> selectFollowingsById(int uid);
 
     @Delete({
-            "DELETE FROM follow_relations",
-            "WHERE",
-            "followed_id = #{followedId, jdbcType=INTEGER}",
-            "AND",
-            "follower_id = #{followerId, jdbcType=INTEGER}"
+                    "DELETE FROM follow_relations",
+                    "WHERE",
+                    "followed_id = #{followedId, jdbcType=INTEGER}",
+                    "AND",
+                    "follower_id = #{followerId, jdbcType=INTEGER}"
     })
     int removeFollowingRelation(int followedId, int followerId);
 }
