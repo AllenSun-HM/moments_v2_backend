@@ -27,11 +27,16 @@ public class UserController {
         this.userService = userService;
     }
 
+    private int getLoggedUid(HttpServletRequest request) {
+        return (int) request.getAttribute("logged_uid");
+    }
+
     @PostMapping()
     @RequireToken
     public JsonResult<?> addUser(@JsonProperty("name") String name, @JsonProperty String email, @JsonProperty("sex") Integer sex, @JsonProperty("age") Integer age, @JsonProperty("password") String password) throws Exception {
         return userService.addUser(email, name, sex, age, password);
     }
+
 
     @GetMapping("/{id}")
     @RequireToken
@@ -55,7 +60,7 @@ public class UserController {
     @PostMapping("/follow")
     @RequireToken
     public JsonResult<?> follow(HttpServletRequest request, @RequestParam("uid_to_follow") Integer uidToFollow) {
-        int uidOfFollowed = (int) request.getAttribute("logged_uid");
+        int uidOfFollowed = this.getLoggedUid(request);
         return userService.follow(uidOfFollowed, uidToFollow);
     }
 
@@ -74,7 +79,13 @@ public class UserController {
     @DeleteMapping("/unfollow/{id}")
     @RequireToken
     public JsonResult<?> unfollow(HttpServletRequest request, @PathVariable("id") int followedId) throws Exception {
-        int followerId = (int) request.getAttribute("logged_uid");
+        int followerId = this.getLoggedUid(request);
         return userService.unfollow(followedId, followerId);
+    }
+
+    @GetMapping("/rank/follower")
+    @RequireToken
+    public JsonResult<?> getPopularUsers(HttpServletRequest request, int start, int limit) {
+        return JsonResult.successWithData(userService.selectUsersOrderByFollowerCounts(start, limit));
     }
 }

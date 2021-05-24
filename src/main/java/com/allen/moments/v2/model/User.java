@@ -7,11 +7,12 @@ public class User {
     private int uid;
     private String name;
     private Integer age;
-    private String password;
+    private transient String password;
     private String email;
     private Integer sex;
     private List<Integer> followers = new ArrayList<>();
     private List<Integer> followings = new ArrayList<>();
+    private Integer followerCount;
 
     public User(String name, String email, Integer uid, Integer age, Integer sex, String password) {
         this.name = name;
@@ -20,6 +21,23 @@ public class User {
         this.uid = uid;
         this.sex = sex;
         this.email = email;
+    }
+
+    public User(Integer uid, String name, Integer age, Integer sex, String email) {
+        this.name = name;
+        this.age = age;
+        this.uid = uid;
+        this.sex = sex;
+        this.email = email;
+    }
+
+    public User(Integer uid, String name, Integer age, Integer sex, String email, int followerCount) {
+        this.name = name;
+        this.age = age;
+        this.uid = uid;
+        this.sex = sex;
+        this.email = email;
+        this.followerCount = followerCount;
     }
 
     public int getUid() {
@@ -66,9 +84,6 @@ public class User {
         return followers;
     }
 
-    public void addFollower(Integer uidOfFollower) {
-        this.followers.add(uidOfFollower);
-    }
 
     public List<Integer> getFollowings() {
         return followings;
@@ -76,6 +91,14 @@ public class User {
 
     public void addFollowing(Integer uidToFollow) {
         this.followings.add(uidToFollow);
+    }
+
+    public Integer getFollowerCount() {
+        return followerCount;
+    }
+
+    public void setFollowerCount(Integer followerCount) {
+        this.followerCount = followerCount;
     }
 
     @Override

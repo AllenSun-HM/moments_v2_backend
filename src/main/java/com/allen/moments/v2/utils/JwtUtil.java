@@ -10,13 +10,11 @@ import java.util.*;
 @Component
 public class JwtUtil {
     private static Logger log = LoggerFactory.getLogger(JwtUtil.class);
-    public static final String AUTH_HEADER_KEY = "Authorization";
-    public static final String TOKEN_PREFIX = "Bearer ";
+    private static final long aWeekInMs = 604800000;
     public String getToken(User user) {
-
         String token = "";
-        token = com.auth0.jwt.JWT.create().withAudience(String.valueOf(user.getUid())).withExpiresAt(new Date())
-                .sign(Algorithm.HMAC256(user.getPassword()));
+        token = com.auth0.jwt.JWT.create().withAudience(String.valueOf(user.getUid())).withExpiresAt(new Date(System.currentTimeMillis() + aWeekInMs))
+                .sign(Algorithm.HMAC256("${application.jwt.secret_key}"));
         return token;
     }
 }

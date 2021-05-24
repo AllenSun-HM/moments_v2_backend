@@ -25,11 +25,11 @@ public interface PostDao {
 
     @Insert({
         "INSERT INTO post (postid, text, ",
-        "postedBy, timeCreated, ",
-        "photo, like)",
+        "posted_by, time_created, ",
+        "photo, like_count)",
         "VALUES (#{postid,jdbcType=INTEGER}, #{text,jdbcType=VARCHAR}, ",
         "#{postedby,jdbcType=INTEGER}, #{timecreated,jdbcType=TIMESTAMP}, ",
-        "#{jsonPhotos,jdbcType=LONGVARCHAR}, #{jsonLikes,jdbcType=LONGVARCHAR})"
+        "#{jsonPhotos,jdbcType=LONGVARCHAR}, #{jsonLikes,jdbcType=INTEGER})"
     })
     int insert(PostWithBLOBs record);
 
@@ -38,17 +38,17 @@ public interface PostDao {
 
     @Select({
         "SELECT",
-        "postid, text, postedBy, timeCreated, photo, like",
+        "postid, text, posted_by, time_created, photo, like_count",
         "FROM post",
         "WHERE postid = #{postid,jdbcType=INTEGER}"
     })
     @Results({
         @Result(column="postid", property="postid", jdbcType=JdbcType.INTEGER, id=true),
         @Result(column="text", property="text", jdbcType=JdbcType.VARCHAR),
-        @Result(column="postedBy", property="postedby", jdbcType=JdbcType.INTEGER),
-        @Result(column="timeCreated", property="timecreated", jdbcType=JdbcType.TIMESTAMP),
+        @Result(column="posted_by", property="postedby", jdbcType=JdbcType.INTEGER),
+        @Result(column="time_created", property="timecreated", jdbcType=JdbcType.TIMESTAMP),
         @Result(column="photo", property="jsonPhotos", jdbcType=JdbcType.LONGVARCHAR),
-        @Result(column="like", property="jsonLikes", jdbcType=JdbcType.LONGVARCHAR)
+        @Result(column="like_count", property="jsonLikes", jdbcType=JdbcType.INTEGER)
     })
     PostWithBLOBs selectByPrimaryKey(Integer postid);
 
@@ -58,10 +58,10 @@ public interface PostDao {
     @Update({
         "UPDATE post",
         "SET text = #{text,jdbcType=VARCHAR},",
-          "postedBy = #{postedby,jdbcType=INTEGER},",
-          "timeCreated = #{timecreated,jdbcType=TIMESTAMP},",
+          "posted_by = #{postedby,jdbcType=INTEGER},",
+          "time_created = #{timecreated,jdbcType=TIMESTAMP},",
           "photo = #{jsonPhotos,jdbcType=LONGVARCHAR},",
-          "like = #{jsonPhotos,jdbcType=LONGVARCHAR}",
+          "like_count = #{jsonPhotos,jdbcType=LONGVARCHAR}",
         "WHERE postid = #{postid,jdbcType=INTEGER}"
     })
     int updateByPrimaryKeyWithBLOBs(PostWithBLOBs record);
@@ -69,8 +69,8 @@ public interface PostDao {
     @Update({
         "UPDATE post",
         "SET text = #{text,jdbcType=VARCHAR},",
-          "postedBy = #{postedby,jdbcType=INTEGER},",
-          "timeCreated = #{timecreated,jdbcType=TIMESTAMP}",
+          "posted_by = #{postedby,jdbcType=INTEGER},",
+          "time_created = #{timecreated,jdbcType=TIMESTAMP}",
         "WHERE postid = #{postid,jdbcType=INTEGER}"
     })
     int updateByPrimaryKey(Post record);
@@ -78,8 +78,8 @@ public interface PostDao {
     @Update({
             "UPDATE post",
             "SET text = #{text,jdbcType=VARCHAR},",
-            "postedBy = #{postedby,jdbcType=INTEGER},",
-            "timeCreated = #{timecreated,jdbcType=TIMESTAMP}",
+            "posted_by = #{postedby,jdbcType=INTEGER},",
+            "time_created = #{timecreated,jdbcType=TIMESTAMP}",
             "WHERE postid = #{postid,jdbcType=INTEGER}"
     })
     @Select({
@@ -89,17 +89,16 @@ public interface PostDao {
     int selectMaxPostId();
 
     @Select({
-            "SELECT post.postid, post.text, post.postedBy, post.timeCreated, post.photo, COUNT(likeBy)",
+            "SELECT post.postid, post.text, post.posted_by, post.time_created, post.photo, post.like_count",
             "FROM MomentsDB.post",
-            "LEFT JOIN MomentsDB.post_likes",
-            "ON post.postid = post_likes.postId",
+            "ON post.postid = post_likes.postid",
             "GROUP BY post.postid"
     })
     @Results({
             @Result(column="postid", property="postid", jdbcType=JdbcType.INTEGER, id=true),
             @Result(column="text", property="text", jdbcType=JdbcType.VARCHAR),
-            @Result(column="postedBy", property="postedby", jdbcType=JdbcType.INTEGER),
-            @Result(column="timeCreated", property="timecreated", jdbcType=JdbcType.TIMESTAMP),
+            @Result(column="posted_by", property="postedby", jdbcType=JdbcType.INTEGER),
+            @Result(column="time_created", property="timecreated", jdbcType=JdbcType.TIMESTAMP),
             @Result(column="photo", property="jsonPhotos", jdbcType=JdbcType.LONGVARCHAR),
             @Result(column="like", property="jsonLikes", jdbcType=JdbcType.LONGVARCHAR)
     })
@@ -107,27 +106,27 @@ public interface PostDao {
 
     @Insert({
             "INSERT INTO post_likes",
-            "(postid, likeBy)",
+            "(postid, like_by)",
             "VALUES (#{postId,jdbcType=INTEGER}, #{uid,jdbcType=INTEGER})",
     })
     int insertLikeRecord(int uid, int postId);
 
     @Delete({
             "DELETE FROM post_likes",
-            "WHERE postId = #{postId,jdbcType=INTEGER} and likeBy = #{uid,jdbcType=VARCHAR}",
+            "WHERE postid = #{postId,jdbcType=INTEGER} and like_by = #{uid,jdbcType=VARCHAR}",
     })
     int removeLikeRecord(int uid, int postId);
 
     @Insert({
             "INSERT INTO post_comment",
-            "(postId, comment, commentedBy)",
+            "(postid, comment, commented_by)",
             "VALUES (#{postId,jdbcType=INTEGER},#{comment,jdbcType=LONGVARCHAR}, #{commentedBy,jdbcType=VARCHAR})",
     })
     int insertCommentRecord(int postId, String comment, int commentedBy);
 
     @Delete({
             "DELETE FROM post_comment",
-            "WHERE comment_id = #{commentId,jdbcType=INTEGER} AND commentedBy = #{uid,jdbcType=INTEGER}",
+            "WHERE comment_id = #{commentId,jdbcType=INTEGER} AND commented_by = #{uid,jdbcType=INTEGER}",
     })
     int removeCommentRecord(int commentId, int uid);
 

@@ -4,6 +4,10 @@ import com.allen.moments.v2.redis.RedisUtil;
 import com.allen.moments.v2.utils.JsonResult;
 import com.allen.moments.v2.utils.annotations.PassToken;
 import com.allen.moments.v2.utils.annotations.RequireToken;
+import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -46,18 +50,21 @@ public class AuthInterceptor implements HandlerInterceptor {
             if (userLoginToken.isTokenNeeded()) {
                 // 执行认证
                 try {
-                    String token = request.getHeader("token"); // 从 http 请求头中取出 token
+                    String token = request.getHeader("Authorization").substring(7); // 从 http 请求头中取出 token
+                    System.out.println(token);
                     if (token == null) {
                         throw new RuntimeException("no token found, login is needed");
                     }
+                    // 验证 token
+                    JWTVerifier jwtVerifier = com.auth0.jwt.JWT.require(Algorithm.HMAC256("${application.jwt.secret_key}")).build();
+                    DecodedJWT jwt = jwtVerifier.verify(token);
                     int uid;
-                    boolean isLogged;
-                    uid = (Integer.parseInt(com.auth0.jwt.JWT.decode(token).getAudience().get(0)));
+                    uid = (Integer.parseInt(jwt.getAudience().get(0)));
+                    request.setAttribute("logged_uid", uid);
 //                    isLogged = redisUtil.getBit("loggedUsers", uid - 10000); // use redis as the session manager
 //                    if (!isLogged) {
 //                        throw new RuntimeException("user not found, please login again");
 //                    }
-                    request.setAttribute("logged_uid", uid);
                 }
                 catch (Exception exception) {
                     ObjectMapper mapper = new ObjectMapper();
@@ -69,15 +76,8 @@ public class AuthInterceptor implements HandlerInterceptor {
                     response.getWriter().write(mapper.writeValueAsString(jsonResult));
                     return false;
                 }
-//                // 验证 token
-//                JWTVerifier jwtVerifier = com.auth0.jwt.JWT.require(Algorithm.HMAC256(user.getPassword())).build();
-//                try {
-//                    jwtVerifier.verify(token);
-//                } catch (JWTVerificationException e) {
-//                    throw new RuntimeException("502");
-//                }
-                return true;
-            }
+
+           }
         }
         return true;
     }

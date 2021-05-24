@@ -50,15 +50,20 @@ public interface UserDao {
 
     @Select({
             "SELECT",
-            "follow_relations.followed_id, user.name, user.age, user.sex, user.password, user.email",
-            "FROM follow_relations",
-            "LEFT JOIN user",
-            "ON follow_relations.followed_id = user.uid",
-            "GROUP BY follow_relations.followed_id",
-            "ORDER BY COUNT(follow_relations.followed_id)",
-            "LIMIT #{start, jdbcType=INTEGER)} #{limit, jdbcType=INTEGER)}"
+            "uid, name, age, sex, email, follower_count",
+            "FROM user",
+            "ORDER BY follower_count DESC",
+            "LIMIT #{start,jdbcType=INTEGER}, #{limit,jdbcType=INTEGER}"
     })
-    List<User> selectUsersOrderByFollowersCounts(int start, int limit);
+    @Results({
+            @Result(column="uid", property="uid", jdbcType=JdbcType.INTEGER, id=true),
+            @Result(column="name", property="name", jdbcType=JdbcType.VARCHAR),
+            @Result(column="age", property="age", jdbcType=JdbcType.INTEGER),
+            @Result(column="sex", property="sex", jdbcType=JdbcType.INTEGER),
+            @Result(column="email", property="email", jdbcType=JdbcType.VARCHAR),
+            @Result(column="follower_count", property="followerCount", jdbcType=JdbcType.INTEGER)
+    })
+    List<User> selectUsersOrderByFollowerCounts(int start, int limit);
 
     @UpdateProvider(type=UserSqlProvider.class, method="updateByPrimaryKeySelective")
     int updateByPrimaryKeySelective(User record);

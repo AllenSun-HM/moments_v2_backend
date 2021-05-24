@@ -84,9 +84,12 @@ public class UserService {
 //            }
     }
 
-//    public List<User> selectUsersWithLimits() {
-//        List<User>
-//    }
+    public List<User> selectUsersOrderByFollowerCounts(int start, int limit) {
+//        List<User> selectedUsersCached = redis.("");
+        List<User> selectedUsers = userDao.selectUsersOrderByFollowerCounts(start, limit);
+        return selectedUsers;
+    }
+
     public JsonResult<?> getFollower(int uid) {
             String redisKey = "user:" + uid + ":follower";
             Set<Object> followersCached = redis.sGet(redisKey);
