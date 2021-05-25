@@ -1,6 +1,6 @@
 package com.allen.moments.v2.api;
 
-import com.allen.moments.v2.model.PostWithBLOBs;
+import com.allen.moments.v2.model.Post;
 import com.allen.moments.v2.service.PostService;
 import com.allen.moments.v2.service.S3Service;
 import com.allen.moments.v2.utils.JsonResult;
@@ -29,9 +29,10 @@ public class PostController {
 
     @PostMapping()
     @RequireToken
-    public JsonResult<?> addPost(@JsonProperty("uid") Integer uid, @JsonProperty("text") String text, List<MultipartFile> photos) {
+    public JsonResult<?> addPost(HttpServletRequest request, @JsonProperty("text") String text, List<MultipartFile> photos) {
         JsonResult<?> result;
         boolean isAddSuccess = false;
+        int uid = (Integer) request.getAttribute("logged_uid");
         try {
             if (photos != null && photos.size() > 0) { // 如果用户上传了图片
                 List<String> photoUrls = s3Service.upload(photos);
@@ -131,8 +132,8 @@ public class PostController {
     @GetMapping("/{postId}")
     @RequireToken
     public JsonResult<?> getPost(@PathVariable("postId") int postId) {
-        PostWithBLOBs post = postService.getPost(postId);
-        JsonResult<PostWithBLOBs> result;
+        Post post = postService.getPost(postId);
+        JsonResult<Post> result;
         if (post != null) {
             return JsonResult.successWithData(post);
         }

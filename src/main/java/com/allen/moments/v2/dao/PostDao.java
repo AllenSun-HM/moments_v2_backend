@@ -1,7 +1,6 @@
 package com.allen.moments.v2.dao;
 
 import com.allen.moments.v2.model.Post;
-import com.allen.moments.v2.model.PostWithBLOBs;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.InsertProvider;
@@ -18,91 +17,70 @@ import java.util.List;
 @Repository
 public interface PostDao {
     @Delete({
-        "DELETE FROM post",
-        "WHERE postid = #{postid,jdbcType=INTEGER}"
+        "delete from post",
+        "where postid = #{postid,jdbcType=INTEGER}"
     })
     int deleteByPrimaryKey(Integer postid);
 
     @Insert({
-        "INSERT INTO post (postid, text, ",
+        "insert into post (postid, text, ",
         "posted_by, time_created, ",
-        "photo, like_count)",
-        "VALUES (#{postid,jdbcType=INTEGER}, #{text,jdbcType=VARCHAR}, ",
-        "#{postedby,jdbcType=INTEGER}, #{timecreated,jdbcType=TIMESTAMP}, ",
-        "#{jsonPhotos,jdbcType=LONGVARCHAR}, #{jsonLikes,jdbcType=INTEGER})"
+        "like_count, photo)",
+        "values (#{postid,jdbcType=INTEGER}, #{text,jdbcType=VARCHAR}, ",
+        "#{postedBy,jdbcType=INTEGER}, #{timeCreated,jdbcType=TIMESTAMP}, ",
+        "#{likeCount,jdbcType=INTEGER}, #{jsonPhotoUrls,jdbcType=LONGVARCHAR})"
     })
-    int insert(PostWithBLOBs record);
+    int insert(Post record);
 
     @InsertProvider(type=PostSqlProvider.class, method="insertSelective")
     int insertSelective(Post record);
 
     @Select({
-        "SELECT",
-        "postid, text, posted_by, time_created, photo, like_count",
-        "FROM post",
-        "WHERE postid = #{postid,jdbcType=INTEGER}"
+        "select",
+        "postid, text, posted_by, time_created, like_count, photo",
+        "from post",
+        "where postid = #{postid,jdbcType=INTEGER}"
     })
     @Results({
         @Result(column="postid", property="postid", jdbcType=JdbcType.INTEGER, id=true),
         @Result(column="text", property="text", jdbcType=JdbcType.VARCHAR),
-        @Result(column="posted_by", property="postedby", jdbcType=JdbcType.INTEGER),
-        @Result(column="time_created", property="timecreated", jdbcType=JdbcType.TIMESTAMP),
-        @Result(column="photo", property="jsonPhotos", jdbcType=JdbcType.LONGVARCHAR),
-        @Result(column="like_count", property="jsonLikes", jdbcType=JdbcType.INTEGER)
+        @Result(column="posted_by", property="postedBy", jdbcType=JdbcType.INTEGER),
+        @Result(column="time_created", property="timeCreated", jdbcType=JdbcType.TIMESTAMP),
+        @Result(column="like_count", property="likeCount", jdbcType=JdbcType.INTEGER),
+        @Result(column="photo", property="jsonPhotoUrls", jdbcType=JdbcType.LONGVARCHAR)
     })
-    PostWithBLOBs selectByPrimaryKey(Integer postid);
+    Post selectByPrimaryKey(Integer postid);
 
     @UpdateProvider(type=PostSqlProvider.class, method="updateByPrimaryKeySelective")
-    int updateByPrimaryKeySelective(PostWithBLOBs record);
+    int updateByPrimaryKeySelective(Post record);
 
-    @Update({
-        "UPDATE post",
-        "SET text = #{text,jdbcType=VARCHAR},",
-          "posted_by = #{postedby,jdbcType=INTEGER},",
-          "time_created = #{timecreated,jdbcType=TIMESTAMP},",
-          "photo = #{jsonPhotos,jdbcType=LONGVARCHAR},",
-          "like_count = #{jsonPhotos,jdbcType=LONGVARCHAR}",
-        "WHERE postid = #{postid,jdbcType=INTEGER}"
-    })
-    int updateByPrimaryKeyWithBLOBs(PostWithBLOBs record);
+//    @Update({
+//        "update post",
+//        "set text = #{text,jdbcType=VARCHAR},",
+//          "posted_by = #{postedBy,jdbcType=INTEGER},",
+//          "time_created = #{timeCreated,jdbcType=TIMESTAMP},",
+//          "like_count = #{likeCount,jdbcType=INTEGER},",
+//          "photo = #{jsonPhotoUrls,jdbcType=LONGVARCHAR}",
+//        "where postid = #{postid,jdbcType=INTEGER}"
+//    })
+//    int updateByPrimaryKeyWithBLOBs(Post record);
+//
+//    @Update({
+//        "update post",
+//        "set text = #{text,jdbcType=VARCHAR},",
+//          "posted_by = #{postedBy,jdbcType=INTEGER},",
+//          "time_created = #{timeCreated,jdbcType=TIMESTAMP},",
+//          "like_count = #{likeCount,jdbcType=INTEGER}",
+//        "where postid = #{postid,jdbcType=INTEGER}"
+//    })
+//    int updateByPrimaryKey(Post record);
 
-    @Update({
-        "UPDATE post",
-        "SET text = #{text,jdbcType=VARCHAR},",
-          "posted_by = #{postedby,jdbcType=INTEGER},",
-          "time_created = #{timecreated,jdbcType=TIMESTAMP}",
-        "WHERE postid = #{postid,jdbcType=INTEGER}"
-    })
-    int updateByPrimaryKey(Post record);
 
-    @Update({
-            "UPDATE post",
-            "SET text = #{text,jdbcType=VARCHAR},",
-            "posted_by = #{postedby,jdbcType=INTEGER},",
-            "time_created = #{timecreated,jdbcType=TIMESTAMP}",
-            "WHERE postid = #{postid,jdbcType=INTEGER}"
-    })
     @Select({
             "SELECT max(postid)",
             "FROM post"
     })
     int selectMaxPostId();
-
-    @Select({
-            "SELECT post.postid, post.text, post.posted_by, post.time_created, post.photo, post.like_count",
-            "FROM MomentsDB.post",
-            "ON post.postid = post_likes.postid",
-            "GROUP BY post.postid"
-    })
-    @Results({
-            @Result(column="postid", property="postid", jdbcType=JdbcType.INTEGER, id=true),
-            @Result(column="text", property="text", jdbcType=JdbcType.VARCHAR),
-            @Result(column="posted_by", property="postedby", jdbcType=JdbcType.INTEGER),
-            @Result(column="time_created", property="timecreated", jdbcType=JdbcType.TIMESTAMP),
-            @Result(column="photo", property="jsonPhotos", jdbcType=JdbcType.LONGVARCHAR),
-            @Result(column="like", property="jsonLikes", jdbcType=JdbcType.LONGVARCHAR)
-    })
-    List<PostWithBLOBs> selectAllPosts();
 
     @Insert({
             "INSERT INTO post_likes",
@@ -130,14 +108,20 @@ public interface PostDao {
     })
     int removeCommentRecord(int commentId, int uid);
 
-//    @Insert({
-//            "insert into post_photo (postid, url)",
-//            "values",
-//            "<foreach collection=\"items\" index=\"index\" item=\"item\" separator=\",\"> ",
-//            "(#{item.postid},#{item.url})",
-//            "</foreach> ",
-//    })
-//    int insertAll(List<Photo> photos);
-
-
+    @Select({
+            "SELECT post.postid, post.text, post.posted_by, post.time_created, post.photo, post.like_count",
+            "FROM MomentsDB.post",
+            "ON post.postid = post_likes.postid",
+            "GROUP BY post.postid"
+    })
+    @Results({
+            @Result(column="postid", property="postid", jdbcType=JdbcType.INTEGER, id=true),
+            @Result(column="text", property="text", jdbcType=JdbcType.VARCHAR),
+            @Result(column="posted_by", property="postedBy", jdbcType=JdbcType.INTEGER),
+            @Result(column="time_created", property="timeCreated", jdbcType=JdbcType.TIMESTAMP),
+            @Result(column="photo", property="jsonPhotoUrls", jdbcType=JdbcType.LONGVARCHAR),
+            @Result(column="like_count", property="likeCount", jdbcType=JdbcType.INTEGER)
+    })
+    List<Post> selectAllPosts();
 }
+

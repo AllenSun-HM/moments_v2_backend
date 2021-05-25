@@ -1,7 +1,6 @@
 package com.allen.moments.v2.aop;
 
 import com.alibaba.fastjson.JSONObject;
-import com.allen.moments.v2.utils.JsonResult;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.*;
 import org.slf4j.Logger;
@@ -27,17 +26,17 @@ import org.springframework.stereotype.Component;
             for (Object arg : args) {
                 params.append(arg).append(" ");
             }
-            logger.info(className + "的" + methodName + "入参为：" + params.toString());
+            logger.info("class " + className + "'s " + methodName + " has parameter(s)：" + JSONObject.toJSONString(params));
         }
 
         /**
-         * 返回之后，打印出参
+         * after method return, print returned value
          */
         @AfterReturning(value = "execution(public * com.allen.moments.v2.api.*.*(..))", returning = "returnVal")
         public void afterReturning(JoinPoint joinPoint, Object returnVal) {
             String className = joinPoint.getTarget().getClass().getName();
             String methodName = joinPoint.getSignature().getName();
-            logger.info(className + "的" + methodName + "结果为：" + returnVal.toString());
+            logger.info("class " + className + "'s " + methodName + " returns: " + returnVal.toString());
         }
 
     }

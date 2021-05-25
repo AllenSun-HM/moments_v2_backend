@@ -22,7 +22,7 @@ public class S3Service {
     public List<String> upload(List<MultipartFile> files) throws Exception {
         ArrayList<String> fileUrls = new ArrayList<String>();
         for (MultipartFile file : files) {
-            String url = s3Client.uploadFile(file);
+            String url = s3Client.uploadFile(file, file.getName());
             fileUrls.add(url);
         }
         return fileUrls;

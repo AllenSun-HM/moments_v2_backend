@@ -2,7 +2,6 @@ package com.allen.moments.v2.service;
 
 import com.allen.moments.v2.dao.PostDao;
 import com.allen.moments.v2.model.Post;
-import com.allen.moments.v2.model.PostWithBLOBs;
 import com.allen.moments.v2.redis.RedisUtil;
 import com.allen.moments.v2.utils.ThreadPoolManager;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +28,7 @@ public class PostService {
 
     public boolean addPost(int uid, String text) {
             int postId = getPostId();
-            Date timeCreated = new Date();
-            Post post = new Post(text, uid, timeCreated);
+            Post post = new Post(postId, text, uid);
             int rowsAffected = postDao.insertSelective(post);
             redis.set("post:" + postId, post);
             return rowsAffected == 1;
@@ -41,23 +39,25 @@ public class PostService {
      * @return whether the operation success or not
      */
     public boolean addPostWithPhotos(int uid, String text, List<String> photoUrls) {
-        Date timeCreated = new Date();
         int postId = getPostId();
-            PostWithBLOBs post = new PostWithBLOBs(text, uid, timeCreated, photoUrls);
+            Post post = new Post(postId, text, uid, photoUrls);
             int rowsAffected = postDao.insertSelective(post);
-            redis.set("post:" + postId, post);
-            return rowsAffected == 1;
+            if (rowsAffected == 1) {
+                redis.set("post:" + postId, post);
+                return true;
+            }
+            return false;
     }
 
-    public PostWithBLOBs getPost(int postId) {
-            PostWithBLOBs post = (PostWithBLOBs) redis.get("post:" + (postId));
+    public Post getPost(int postId) {
+            Post post = (Post) redis.get("post:" + (postId));
             if (post != null) {
                 return post;
             }
             return postDao.selectByPrimaryKey(postId);
     }
 
-    public List<PostWithBLOBs> getAllPosts() {
+    public List<Post> getAllPosts() {
         return postDao.selectAllPosts();
     }
 

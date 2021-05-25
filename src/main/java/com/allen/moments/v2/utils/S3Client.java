@@ -5,6 +5,9 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.AccessControlList;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -47,25 +50,29 @@ public class S3Client {
     @Value("${aws.s3.bucket_name}")
     private String bucketName;
 
-    public String uploadFile(MultipartFile multipartFile)
+    public String uploadFile(MultipartFile multipartFile, String fileName)
             throws Exception {
         String fileUrl = "";
         File file = convertMultiPartToFile(multipartFile);
-        String fileName = generateFileName(multipartFile);
         fileUrl = endpointUrl + "/" + bucketName + "/" + fileName;
         uploadFileToS3Bucket(fileName, file);
         file.delete();
         return fileUrl;
     }
 
-    public String deleteFileFromS3Bucket(String fileUrl) {
-        String fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1);
-        client.deleteObject(bucketName, fileName);
-        return "Successfully deleted";
+    public Boolean deleteFileFromS3Bucket(String fileUrl) {
+        try {
+            String fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1);
+            client.deleteObject(bucketName, fileName);
+            return true;
+        }
+        catch (Exception exception) {
+            return false;
+        }
     }
 
     private void uploadFileToS3Bucket(String fileName, File file) {
-        client.putObject(bucketName, fileName, file);
+        client.putObject(new PutObjectRequest(bucketName, fileName, file).withCannedAcl(CannedAccessControlList.PublicRead));
     }
 
     private File convertMultiPartToFile(MultipartFile file)

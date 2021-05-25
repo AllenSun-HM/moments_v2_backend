@@ -1,11 +1,11 @@
 package com.allen.moments.v2.dao;
 
-import com.allen.moments.v2.model.PostWithBLOBs;
+import com.allen.moments.v2.model.Post;
 import org.apache.ibatis.jdbc.SQL;
 
 public class PostSqlProvider {
 
-    public String insertSelective(PostWithBLOBs record) {
+    public String insertSelective(Post record) {
         SQL sql = new SQL();
         sql.INSERT_INTO("post");
         
@@ -17,22 +17,26 @@ public class PostSqlProvider {
             sql.VALUES("text", "#{text,jdbcType=VARCHAR}");
         }
         
-        if (record.getPostedby() != null) {
-            sql.VALUES("postedBy", "#{postedby,jdbcType=INTEGER}");
+        if (record.getPostedBy() != null) {
+            sql.VALUES("posted_by", "#{postedBy,jdbcType=INTEGER}");
         }
         
-        if (record.getTimecreated() != null) {
-            sql.VALUES("timeCreated", "#{timecreated,jdbcType=TIMESTAMP}");
+        if (record.getTimeCreated() != null) {
+            sql.VALUES("time_created", "#{timeCreated,jdbcType=TIMESTAMP}");
         }
         
-        if (record.getJsonPhotos() != null) {
-            sql.VALUES("photo", "#{photo,jdbcType=LONGVARCHAR}");
+        if (record.getLikeCount() != null) {
+            sql.VALUES("like_count", "#{likeCount,jdbcType=INTEGER}");
         }
-
+        
+        if (record.getJsonPhotoUrls() != null) {
+            sql.VALUES("photo", "#{jsonPhotoUrls,jdbcType=LONGVARCHAR}");
+        }
+        
         return sql.toString();
     }
 
-    public String updateByPrimaryKeySelective(PostWithBLOBs record) {
+    public String updateByPrimaryKeySelective(Post record) {
         SQL sql = new SQL();
         sql.UPDATE("post");
         
@@ -40,19 +44,24 @@ public class PostSqlProvider {
             sql.SET("text = #{text,jdbcType=VARCHAR}");
         }
         
-        if (record.getPostedby() != null) {
-            sql.SET("postedBy = #{postedby,jdbcType=INTEGER}");
+        if (record.getPostedBy() != null) {
+            sql.SET("posted_by = #{postedBy,jdbcType=INTEGER}");
         }
         
-        if (record.getTimecreated() != null) {
-            sql.SET("timeCreated = #{timecreated,jdbcType=TIMESTAMP}");
+        if (record.getTimeCreated() != null) {
+            sql.SET("time_created = #{timeCreated,jdbcType=TIMESTAMP}");
         }
         
-        if (record.getJsonPhotos() != null) {
-            sql.SET("photo = #{photo,jdbcType=LONGVARCHAR}");
+        if (record.getLikeCount() != null) {
+            sql.SET("like_count = #{likeCount,jdbcType=INTEGER}");
         }
-
+        
+        if (record.getJsonPhotoUrls() != null) {
+            sql.SET("photo = #{jsonPhotoUrls,jdbcType=LONGVARCHAR}");
+        }
+        
         sql.WHERE("postid = #{postid,jdbcType=INTEGER}");
+        
         return sql.toString();
     }
 }

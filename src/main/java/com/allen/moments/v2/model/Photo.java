@@ -5,11 +5,11 @@ public class Photo {
 
     private String url;
 
-    public Integer getPostid() {
+    public Integer getPostId() {
         return postid;
     }
 
-    public void setPostid(Integer postid) {
+    public void setPostId(Integer postid) {
         this.postid = postid;
     }
 
@@ -33,7 +33,7 @@ public class Photo {
             return false;
         }
         Photo other = (Photo) that;
-        return (this.getPostid() == null ? other.getPostid() == null : this.getPostid().equals(other.getPostid()))
+        return (this.getPostId() == null ? other.getPostId() == null : this.getPostId().equals(other.getPostId()))
             && (this.getUrl() == null ? other.getUrl() == null : this.getUrl().equals(other.getUrl()));
     }
 
@@ -41,7 +41,7 @@ public class Photo {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((getPostid() == null) ? 0 : getPostid().hashCode());
+        result = prime * result + ((getPostId() == null) ? 0 : getPostId().hashCode());
         result = prime * result + ((getUrl() == null) ? 0 : getUrl().hashCode());
         return result;
     }
