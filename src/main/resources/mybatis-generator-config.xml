@@ -13,7 +13,7 @@
             <property name="suppressAllComments" value="true"/>
         </commentGenerator>
         <!--数据库链接URL，用户名、密码 -->
-        <jdbcConnection driverClass="com.mysql.jdbc.Driver" connectionURL="jdbc:mysql://database-1.cncnpgr9d0ml.ap-northeast-2.rds.amazonaws.com:3306/MomentsDB?serverTimezone=UTC&amp;useSSL=false&amp;allowPublicKeyRetrieval=true" userId="admin" password="Swjdaerbi233233">
+        <jdbcConnection driverClass="com.mysql.jdbc.Driver" connectionURL="jdbc:mysql://database-1.cncnpgr9d0ml.ap-northeast-2.rds.amazonaws.com:3306/MomentsDB?serverTimezone=UTC&amp;useSSL=false&amp;allowPublicKeyRetrieval=true" userId="***" password="***">
         </jdbcConnection>
         <javaTypeResolver>
             <property name="forceBigDecimals" value="false"/>
