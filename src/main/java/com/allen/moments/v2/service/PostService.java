@@ -50,7 +50,9 @@ public class PostService {
     }
 
     public Post getPost(int postId) {
+//            redis.get("post:comment:" + postId);
             Post post = (Post) redis.get("post:" + (postId));
+
             if (post != null) {
                 return post;
             }

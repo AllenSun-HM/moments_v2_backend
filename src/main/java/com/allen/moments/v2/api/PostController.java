@@ -44,7 +44,6 @@ public class PostController {
 
         }
         catch (Exception exception) {
-            System.err.println(exception.getMessage());
             return JsonResult.unknownFailure();
         }
     }
@@ -135,6 +134,7 @@ public class PostController {
         Post post = postService.getPost(postId);
         JsonResult<Post> result;
         if (post != null) {
+            post.setJsonPhotoUrls(null);
             return JsonResult.successWithData(post);
         }
         return JsonResult.failure(200002, "no post found");

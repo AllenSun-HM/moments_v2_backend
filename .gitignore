@@ -4,7 +4,7 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 /src/main/resources/application.properties
-
+/src/main/resources/mybatis-generator-config.xml
 
 ### STS ###
 .apt_generated
