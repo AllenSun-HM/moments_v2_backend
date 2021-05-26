@@ -127,7 +127,6 @@ public class PostController {
         }
     }
 
-
     @GetMapping("/{postId}")
     @RequireToken
     public JsonResult<?> getPost(@PathVariable("postId") int postId) {
@@ -139,4 +138,15 @@ public class PostController {
         }
         return JsonResult.failure(200002, "no post found");
     }
-}
+
+    @GetMapping("/rank/like_count")
+    @RequireToken
+    public JsonResult<?> getPostsWithHighestLikeCounts(int start, int limit) {
+        List<Post> posts = postService.getPostsWithHighestLikeCounts(start, limit);
+        if (posts == null) {
+            return JsonResult.failure(400001, "no more posts");
+        }
+        return JsonResult.successWithData(posts);
+    }
+
+ }

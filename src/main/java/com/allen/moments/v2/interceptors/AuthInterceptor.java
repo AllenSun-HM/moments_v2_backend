@@ -51,7 +51,6 @@ public class AuthInterceptor implements HandlerInterceptor {
                 // 执行认证
                 try {
                     String token = request.getHeader("Authorization").substring(7); // 从 http 请求头中取出 token
-                    System.out.println(token);
                     if (token == null) {
                         throw new RuntimeException("no token found, login is needed");
                     }

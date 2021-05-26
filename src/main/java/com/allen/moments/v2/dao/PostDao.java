@@ -51,6 +51,24 @@ public interface PostDao {
     })
     Post selectByPrimaryKey(Integer postid);
 
+    @Select({
+            "SELECT",
+            "postid, text, posted_by, time_created, like_count, photo",
+            "FROM post",
+            "ORDER BY like_count DESC",
+            "LIMIT #{start, jdbcType =INTEGER}, #{limit, jdbcType=INTEGER}"
+    })
+    @Results({
+            @Result(column="postid", property="postid", jdbcType=JdbcType.INTEGER, id=true),
+            @Result(column="text", property="text", jdbcType=JdbcType.VARCHAR),
+            @Result(column="posted_by", property="postedBy", jdbcType=JdbcType.INTEGER),
+            @Result(column="time_created", property="timeCreated", jdbcType=JdbcType.TIMESTAMP),
+            @Result(column="like_count", property="likeCount", jdbcType=JdbcType.INTEGER),
+            @Result(column="photo", property="jsonPhotoUrls", jdbcType=JdbcType.LONGVARCHAR)
+    })
+    List<Post> getPostsWithHighestLikeCounts(int start, int limit);
+
+
     @UpdateProvider(type=PostSqlProvider.class, method="updateByPrimaryKeySelective")
     int updateByPrimaryKeySelective(Post record);
 

@@ -63,6 +63,10 @@ public class PostService {
         return postDao.selectAllPosts();
     }
 
+    public List<Post> getPostsWithHighestLikeCounts(int start, int limit) {
+        return postDao.getPostsWithHighestLikeCounts(start, limit);
+    }
+
     /**
      * like a post or unlike a post
      * @return returns whether the operation succeeded or not
@@ -72,7 +76,7 @@ public class PostService {
             ThreadPoolManager.getInstance().execute(new Runnable() {
                 @Override
                 public void run() {
-                    redis.sSet("post:likes:" + (postId), uid);
+                    redis.setSet("post:likes:" + (postId), uid);
                 }
             });
             return true;
