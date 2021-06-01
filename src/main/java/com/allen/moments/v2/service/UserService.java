@@ -68,7 +68,7 @@ public class UserService {
             if (userInDB == null) {
                 throw new RuntimeException("user not found");
             }
-            redis.hset("allUsers", String.valueOf(userInDB.getUid()), userInDB);
+            redis.hashSet("allUsers", String.valueOf(userInDB.getUid()), userInDB);
             return userInDB;
     }
 
@@ -85,20 +85,31 @@ public class UserService {
     }
 
     public List<User> selectUsersOrderByFollowerCounts(int start, int limit) {
-//        List<User> selectedUsersCached = redis.("");
-        List<User> selectedUsers = userDao.selectUsersOrderByFollowerCounts(start, limit);
-        return selectedUsers;
+        try {
+            if (start < 100) { // to avoid having big key in redis, only writes the first 100 popular posts into redis
+                List<User> usersCached = (List<User>) (Object) redis.listGet("usersWithHighestFollowerCounts", start, limit);
+                if (usersCached != null) {
+                    return usersCached;
+                }
+            }
+            List<User>  usersInDB = userDao.selectUsersOrderByFollowerCounts(start, limit);
+            redis.listMSetWithExpiration("postsWithHighestLikeCounts", (List<Object>) (Object) usersInDB.subList(0, 100), 20);
+            return usersInDB;
+        }
+        catch (ClassCastException castException) {
+            return null;
+        }
     }
 
     public JsonResult<?> getFollower(int uid) {
             String redisKey = "user:" + uid + ":follower";
-            Set<Object> followersCached = redis.sGet(redisKey);
+            Set<Object> followersCached = redis.setGetAll(redisKey);
             if (followersCached != null) {
                 return JsonResult.successWithData(followersCached);
             }
             List<Integer> followersInDB = userDao.selectFollowersById(uid);
             if (followersInDB != null) {
-                redis.sSet(redisKey, followersInDB);
+                redis.setSet(redisKey, followersInDB);
                 return JsonResult.successWithData(followersInDB);
             }
             return JsonResult.success();
@@ -107,13 +118,13 @@ public class UserService {
 
     public JsonResult<?> getFollowing(int uid) {
             String redisKey = "user:" + uid + ":following";
-            Set<Object> followingsCached = redis.sGet(redisKey);
+            Set<Object> followingsCached = redis.setGetAll(redisKey);
             if (followingsCached != null) {
                 return JsonResult.successWithData(followingsCached);
             }
             List<Integer> followingsInDB = userDao.selectFollowingsById(uid);
             if (followingsInDB != null) {
-                redis.sSet(redisKey, followingsInDB);
+                redis.setSet(redisKey, followingsInDB);
                 return JsonResult.successWithData(followingsInDB);
             }
             return JsonResult.success();
@@ -126,10 +137,10 @@ public class UserService {
                         @Override
                         public void run() {
                             String followedRedisKey = "user:" + followedId + ":follower";
-                            redis.sSet(followedRedisKey, followedId);
+                            redis.setSet(followedRedisKey, followedId);
 
                             String followerRedisKey = "user:"+ followerId + ":following";
-                            redis.sSet(followerRedisKey, followedId);
+                            redis.setSet(followerRedisKey, followedId);
                         }
                     }
             );

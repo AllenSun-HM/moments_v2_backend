@@ -89,8 +89,8 @@ public class Post {
     }
 
     public void setJsonPhotoUrls(String jsonPhotoUrls) {
-        this.jsonPhotoUrls = jsonPhotoUrls;
-        this.photoUrls = JSONObject.parseArray(this.jsonPhotoUrls, String.class);
+        this.jsonPhotoUrls = null;
+        this.photoUrls = JSONObject.parseArray(jsonPhotoUrls, String.class);
     }
 
     @Override

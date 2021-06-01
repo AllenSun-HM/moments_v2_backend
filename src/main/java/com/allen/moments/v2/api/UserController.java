@@ -79,8 +79,8 @@ public class UserController {
     @DeleteMapping("/unfollow/{id}")
     @RequireToken
     public JsonResult<?> unfollow(HttpServletRequest request, @PathVariable("id") int followedId) throws Exception {
-        int followerId = this.getLoggedUid(request);
-        return userService.unfollow(followedId, followerId);
+        int uidOfFollower = this.getLoggedUid(request);
+        return userService.unfollow(followedId, uidOfFollower);
     }
 
     @GetMapping("/rank/follower")

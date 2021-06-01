@@ -43,7 +43,13 @@ public class PostService {
             Post post = new Post(postId, text, uid, photoUrls);
             int rowsAffected = postDao.insertSelective(post);
             if (rowsAffected == 1) {
-                redis.set("post:" + postId, post);
+                // user another thread to execute redis update in order to avoid waiting for redis execution in the main thread
+                ThreadPoolManager.getInstance().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        redis.set("post:" + postId, post);
+                    }
+                });
                 return true;
             }
             return false;
@@ -63,6 +69,23 @@ public class PostService {
         return postDao.selectAllPosts();
     }
 
+    public List<Post> getPostsWithHighestLikeCounts(int start, int limit) {
+        try {
+            if (start < 100) { // to avoid having big key in redis, only writes the first 100 popular posts into redis
+                List<Post> posts = (List<Post>) (Object) redis.listGet("postsWithHighestLikeCounts", start, limit);
+                if (posts != null) {
+                    return posts;
+                }
+            }
+            List<Post>  postsInDB = postDao.getPostsWithHighestLikeCounts(start, limit);
+            redis.listMSetWithExpiration("postsWithHighestLikeCounts", (List<Object>) (Object) postsInDB.subList(0, 100), 20);
+            return postsInDB;
+        }
+        catch (ClassCastException castException) {
+            return null;
+        }
+    }
+
     /**
      * like a post or unlike a post
      * @return returns whether the operation succeeded or not
@@ -72,7 +95,7 @@ public class PostService {
             ThreadPoolManager.getInstance().execute(new Runnable() {
                 @Override
                 public void run() {
-                    redis.sSet("post:likes:" + (postId), uid);
+                    redis.setSet("post:likes:" + (postId), uid);
                 }
             });
             return true;
@@ -87,6 +110,10 @@ public class PostService {
             return true;
         }
         return false;
+    }
+
+    public List<Integer> getUsersWhoLikedPosts(int postId, int start, int limit) {
+        return postDao.selectUidsThatLikedPost(postId, start, limit);
     }
 
     public boolean addComment(int commentedBy, int postId, String comment) {
