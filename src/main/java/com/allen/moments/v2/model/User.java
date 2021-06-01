@@ -13,6 +13,7 @@ public class User {
     private List<Integer> followers = new ArrayList<>();
     private List<Integer> followings = new ArrayList<>();
     private Integer followerCount;
+    private String avatarURI;
 
     public User(String name, String email, Integer uid, Integer age, Integer sex, String password) {
         this.name = name;
@@ -38,6 +39,16 @@ public class User {
         this.sex = sex;
         this.email = email;
         this.followerCount = followerCount;
+    }
+
+    public User(Integer uid, String name, Integer age, Integer sex, String email, int followerCount, String avatarURI) {
+        this.name = name;
+        this.age = age;
+        this.uid = uid;
+        this.sex = sex;
+        this.email = email;
+        this.followerCount = followerCount;
+        this.avatarURI = avatarURI;
     }
 
     public int getUid() {
@@ -99,6 +110,14 @@ public class User {
 
     public void setFollowerCount(Integer followerCount) {
         this.followerCount = followerCount;
+    }
+
+    public String getAvatarURI() {
+        return this.avatarURI;
+    }
+
+    public void setAvatarURI(String avatarURI) {
+        this.avatarURI = avatarURI;
     }
 
     @Override

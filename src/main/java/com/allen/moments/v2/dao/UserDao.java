@@ -33,7 +33,7 @@ public interface UserDao {
 
     @Select({
                     "select",
-                    "uid, name, age, sex, password, email",
+                    "uid, name, age, sex, email, avatar_uri, follower_count",
                     "from user",
                     "where uid = #{uid,jdbcType=INTEGER}"
     })
@@ -42,15 +42,16 @@ public interface UserDao {
             @Result(column="name", property="name", jdbcType=JdbcType.VARCHAR),
             @Result(column="age", property="age", jdbcType=JdbcType.INTEGER),
             @Result(column="sex", property="sex", jdbcType=JdbcType.INTEGER),
-            @Result(column="password", property="password", jdbcType=JdbcType.VARCHAR),
-            @Result(column="email", property="email", jdbcType=JdbcType.VARCHAR)
+            @Result(column="email", property="email", jdbcType=JdbcType.VARCHAR),
+            @Result(column="follower_count", property="followerCount", jdbcType=JdbcType.INTEGER),
+            @Result(column="avatar_uri", property="avatarURI", jdbcType=JdbcType.VARCHAR)
     })
     User selectByUid(Integer uid);
 
 
     @Select({
             "SELECT",
-            "uid, name, age, sex, email, follower_count",
+            "uid, name, age, sex, email, follower_count, avatar_uri",
             "FROM user",
             "ORDER BY follower_count DESC",
             "LIMIT #{start,jdbcType=INTEGER}, #{limit,jdbcType=INTEGER}"
@@ -61,7 +62,8 @@ public interface UserDao {
             @Result(column="age", property="age", jdbcType=JdbcType.INTEGER),
             @Result(column="sex", property="sex", jdbcType=JdbcType.INTEGER),
             @Result(column="email", property="email", jdbcType=JdbcType.VARCHAR),
-            @Result(column="follower_count", property="followerCount", jdbcType=JdbcType.INTEGER)
+            @Result(column="follower_count", property="followerCount", jdbcType=JdbcType.INTEGER),
+            @Result(column="avatar_uri", property="avatarURI", jdbcType=JdbcType.VARCHAR)
     })
     List<User> selectUsersOrderByFollowerCounts(int start, int limit);
 
@@ -121,17 +123,19 @@ public interface UserDao {
 
     @Select({
                     "SELECT",
-                    "name, email, uid, age, sex, password",
+                    "uid, name, age, sex, email, follower_count, avatar_uri",
                     "FROM user",
                     "WHERE email = #{email, jdbcType=VARCHAR}"
     })
         @Results({
-            @Result(column="name", property="name", jdbcType=JdbcType.VARCHAR),
-            @Result(column="email", property="email", jdbcType=JdbcType.VARCHAR),
-            @Result(column="uid", property="uid", jdbcType=JdbcType.INTEGER, id=true),
-            @Result(column="age", property="age", jdbcType=JdbcType.INTEGER),
-            @Result(column="sex", property="sex", jdbcType=JdbcType.INTEGER),
-            @Result(column="password", property="password", jdbcType=JdbcType.VARCHAR)
+                @Result(column="uid", property="uid", jdbcType=JdbcType.INTEGER, id=true),
+                @Result(column="name", property="name", jdbcType=JdbcType.VARCHAR),
+                @Result(column="age", property="age", jdbcType=JdbcType.INTEGER),
+                @Result(column="sex", property="sex", jdbcType=JdbcType.INTEGER),
+                @Result(column="email", property="email", jdbcType=JdbcType.VARCHAR),
+                @Result(column="follower_count", property="followerCount", jdbcType=JdbcType.INTEGER),
+                @Result(column="avatar_uri", property="avatarURI", jdbcType=JdbcType.VARCHAR)
+
     })
     User selectByEmail(String email);
 
@@ -166,4 +170,11 @@ public interface UserDao {
                     "follower_id = #{followerId, jdbcType=INTEGER}"
     })
     int removeFollowingRelation(int followedId, int followerId);
+
+    @Update({
+            "UPDATE user",
+            "SET avatar_uri = #{avatarURI, jdbcType=VARCHAR}",
+            "WHERE uid = #{uid, jdbcType=INTEGER}"
+    })
+    int addAvatarURI(int uid, String avatarURI);
 }

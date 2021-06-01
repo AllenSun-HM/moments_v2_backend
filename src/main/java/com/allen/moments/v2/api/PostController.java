@@ -34,10 +34,10 @@ public class PostController {
         boolean isAddSuccess = false;
         int uid = (Integer) request.getAttribute("logged_uid");
         try {
-            if (photos != null && photos.size() > 0) { // 如果用户上传了图片
+            if (photos != null && photos.size() > 0) { // photos are uploaded
                 List<String> photoUrls = s3Service.upload(photos);
                 isAddSuccess = postService.addPostWithPhotos(uid, text, photoUrls);
-            } else { // 用户没有上传图片
+            } else { // no photos uploaded
                 isAddSuccess = postService.addPost(uid, text);
             }
             return isAddSuccess ? JsonResult.success() : JsonResult.failure(200001, "post upload failed");

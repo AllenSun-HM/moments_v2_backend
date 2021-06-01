@@ -19,6 +19,10 @@ public class S3Service {
         this.s3Client = s3Client;
     }
 
+    public String upload(MultipartFile file) throws Exception {
+        return s3Client.uploadFile(file, file.getName());
+    }
+
     public List<String> upload(List<MultipartFile> files) throws Exception {
         ArrayList<String> fileUrls = new ArrayList<String>();
         for (MultipartFile file : files) {

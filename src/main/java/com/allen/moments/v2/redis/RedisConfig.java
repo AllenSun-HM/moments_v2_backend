@@ -22,11 +22,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.util.ArrayList;
 
-/**
- * Redis 配置文件
- * @author: allen
- *
- **/
+
 @Configuration
 @AutoConfigureAfter(RedisAutoConfiguration.class)
 public class RedisConfig {
@@ -44,8 +40,7 @@ public class RedisConfig {
     }
     
     /**
-     * @Description:  将哨兵信息放到配置中
-     * @date 2020/6/7 14:42
+     * @Description:  add sentinel config
      */
     @Bean
     public RedisSentinelConfiguration configuration() {
@@ -82,13 +77,9 @@ public class RedisConfig {
         om.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
         jackson2JsonRedisSerializer.setObjectMapper(om);
         StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
-        // key采用String的序列化方式
         template.setKeySerializer(stringRedisSerializer);
-        // hash的key也采用String的序列化方式
         template.setHashKeySerializer(stringRedisSerializer);
-        // value序列化方式采用jackson
         template.setValueSerializer(jackson2JsonRedisSerializer);
-        // hash的value序列化方式采用jackson
         template.setHashValueSerializer(jackson2JsonRedisSerializer);
         template.afterPropertiesSet();
         return template;

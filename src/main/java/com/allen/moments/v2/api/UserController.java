@@ -1,13 +1,14 @@
 package com.allen.moments.v2.api;
 
 import com.allen.moments.v2.model.User;
+import com.allen.moments.v2.service.S3Service;
 import com.allen.moments.v2.service.UserService;
 import com.allen.moments.v2.utils.JsonResult;
 import com.allen.moments.v2.utils.annotations.RequireToken;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 
 import javax.servlet.http.HttpServletRequest;
@@ -22,9 +23,12 @@ import java.util.List;
 @RequireToken
 public class UserController {
     private final UserService userService;
+    private final S3Service s3Service;
+
     @Autowired
-    public UserController(UserService userService, RedisTemplate<String, Object> redisTemplate) {
+    public UserController(UserService userService, S3Service s3Service) {
         this.userService = userService;
+        this.s3Service = s3Service;
     }
 
     private int getLoggedUid(HttpServletRequest request) {
@@ -85,7 +89,15 @@ public class UserController {
 
     @GetMapping("/rank/follower")
     @RequireToken
-    public JsonResult<?> getPopularUsers(HttpServletRequest request, int start, int limit) {
+    public JsonResult<?> getPopularUsers(HttpServletRequest request, int start, int limit) throws Exception {
         return JsonResult.successWithData(userService.selectUsersOrderByFollowerCounts(start, limit));
+    }
+
+    @PostMapping("/avatar")
+    @RequireToken
+    public JsonResult<?> setCustomizedAvatar(HttpServletRequest request, MultipartFile avatar) throws Exception {
+        int uid = this.getLoggedUid(request);
+        String avatarURI = s3Service.upload(avatar);
+        return userService.addCustomizedAvatar(uid, avatarURI);
     }
 }

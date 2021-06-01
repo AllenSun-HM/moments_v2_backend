@@ -12,7 +12,7 @@ import java.util.Set;
 
 
 /**
- * service layer for userinfo-related operations
+ * @Description service layer for userinfo-related operations
  * basic logic:
      * query in redis(cache layer) first,
      * if found, return;
@@ -159,5 +159,13 @@ public class UserService {
                 return JsonResult.failure(20005, "no following relationship exists");
             }
             return JsonResult.success();
+    }
+
+    public JsonResult<?> addCustomizedAvatar(int uid, String avatarURI) {
+        int rowsAffected = userDao.addAvatarURI(uid, avatarURI);
+        if (rowsAffected == 1) {
+            return JsonResult.success();
+        }
+        return JsonResult.failure(400001, "invalid uid");
     }
 }
