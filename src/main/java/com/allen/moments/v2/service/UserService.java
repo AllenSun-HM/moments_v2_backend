@@ -85,9 +85,20 @@ public class UserService {
     }
 
     public List<User> selectUsersOrderByFollowerCounts(int start, int limit) {
-//        List<User> selectedUsersCached = redis.("");
-        List<User> selectedUsers = userDao.selectUsersOrderByFollowerCounts(start, limit);
-        return selectedUsers;
+        try {
+            if (start < 100) { // to avoid having big key in redis, only writes the first 100 popular posts into redis
+                List<User> usersCached = (List<User>) (Object) redis.listGet("usersWithHighestFollowerCounts", start, limit);
+                if (usersCached != null) {
+                    return usersCached;
+                }
+            }
+            List<User>  usersInDB = userDao.selectUsersOrderByFollowerCounts(start, limit);
+            redis.listMSetWithExpiration("postsWithHighestLikeCounts", (List<Object>) (Object) usersInDB.subList(0, 100), 20);
+            return usersInDB;
+        }
+        catch (ClassCastException castException) {
+            return null;
+        }
     }
 
     public JsonResult<?> getFollower(int uid) {

@@ -141,5 +141,12 @@ public interface PostDao {
             @Result(column="like_count", property="likeCount", jdbcType=JdbcType.INTEGER)
     })
     List<Post> selectAllPosts();
+
+    @Select({
+            "SELECT like_by",
+            "FROM post_likes",
+            "WHERE post_id = #{postId}, jdbcType=INTEGER}"
+    })
+    List<Integer> selectUidsThatLikedPost(int postId, int start, int limit);
 }
 

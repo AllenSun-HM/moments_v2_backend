@@ -70,6 +70,18 @@ public class PostController {
         }
     }
 
+    @GetMapping("like/{#postId}")
+    @RequireToken()
+    public JsonResult<?> getUidsWhoLikedThis(@PathVariable("postId")  Integer postId, Integer start, Integer limit) {
+        if (postId == null || start == null || limit == null) {
+            return JsonResult.failure(200010, "illegal query parameter");
+        }
+        if (limit > 200) {
+            return JsonResult.failure(200011, "query range is too big");
+        }
+        return JsonResult.successWithData(postService.getUsersWhoLikedPosts(postId, start, limit));
+    }
+
     @DeleteMapping("/like/{postId}")
     @RequireToken
     public JsonResult<?> UnlikePost(HttpServletRequest request, HttpServletResponse response, @PathVariable("postId") Integer postId) {
@@ -141,12 +153,14 @@ public class PostController {
 
     @GetMapping("/rank/like_count")
     @RequireToken
-    public JsonResult<?> getPostsWithHighestLikeCounts(int start, int limit) {
+    public JsonResult<?> getPostsWithHighestLikeCounts(Integer start, Integer limit) {
+        if (start == null || limit == null) {
+            return JsonResult.failure(200010, "illegal query parameter");
+        }
         List<Post> posts = postService.getPostsWithHighestLikeCounts(start, limit);
         if (posts == null) {
             return JsonResult.failure(400001, "no more posts");
         }
         return JsonResult.successWithData(posts);
     }
-
  }
