@@ -1,13 +1,11 @@
 package com.allen.moments.v2.redis;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -20,7 +18,8 @@ public final class RedisUtil {
 
     /**
      * set the expiration time of a key
-     * @param key key
+     *
+     * @param key  key
      * @param time time in second
      */
     public void expire(String key, long time) {
@@ -35,6 +34,7 @@ public final class RedisUtil {
 
     /**
      * get expiration time of a key
+     *
      * @param key not null
      * @return expiration time in seconds
      */
@@ -44,6 +44,7 @@ public final class RedisUtil {
 
     /**
      * check if a key exists
+     *
      * @return true if exists, false otherwise;
      */
     public Boolean hasKey(String key) {
@@ -57,6 +58,7 @@ public final class RedisUtil {
 
     /**
      * delete key
+     *
      * @param key could be one or multiple keys
      *            whether operation is success or not
      */
@@ -75,6 +77,7 @@ public final class RedisUtil {
 
     /**
      * get value
+     *
      * @return value
      */
     public Object get(String key) {
@@ -94,6 +97,7 @@ public final class RedisUtil {
 
     /**
      * set key and value with expiration time
+     *
      * @param time expiration time in seconds, -1 for no expiration
      * @return true if success false otherwise
      */
@@ -113,6 +117,7 @@ public final class RedisUtil {
 
     /**
      * increase a key's value by certain number
+     *
      * @param delta the number to add to the key's value
      */
     public Long incr(String key, long delta) {
@@ -124,6 +129,7 @@ public final class RedisUtil {
 
     /**
      * decrease a key's value by certain number
+     *
      * @param delta the number to minus from the key's value
      */
     public long decr(String key, long delta) {
@@ -137,7 +143,8 @@ public final class RedisUtil {
 
     /**
      * HashGet
-     * @param key not null
+     *
+     * @param key  not null
      * @param item not null
      */
     public Object hashGet(String key, String item) {
@@ -202,6 +209,7 @@ public final class RedisUtil {
 
     /**
      * delete item(s) from hashset
+     *
      * @param item could be one or multiple items
      */
     public void hashDelete(String key, Object... item) {
@@ -246,7 +254,6 @@ public final class RedisUtil {
     }
 
 
-
     public Long setSet(String key, Object... values) {
         try {
             return redisTemplate.opsForSet().add(key, values);
@@ -289,6 +296,16 @@ public final class RedisUtil {
         }
     }
 
+
+    public Object sRandomMember(String key) {
+        return  redisTemplate.opsForSet().randomMember(key);
+    }
+
+
+    public List<Object> sRandomMembers(String key, long count) {
+        return redisTemplate.opsForSet().randomMembers(key, count);
+    }
+
     // ===============================list=================================
 
 
@@ -300,7 +317,6 @@ public final class RedisUtil {
             return null;
         }
     }
-
 
 
     public long listGetSize(String key) {
@@ -348,7 +364,6 @@ public final class RedisUtil {
     }
 
 
-
     public boolean listMSet(String key, List<Object> value) {
         try {
             redisTemplate.opsForList().rightPushAll(key, value);
@@ -374,7 +389,6 @@ public final class RedisUtil {
     }
 
 
-
     public boolean listUpdateByIndex(String key, long index, Object value) {
         try {
             redisTemplate.opsForList().set(key, index, value);
@@ -384,7 +398,6 @@ public final class RedisUtil {
             return false;
         }
     }
-
 
 
     public Long listRemove(String key, long count, Object value) {
@@ -397,33 +410,113 @@ public final class RedisUtil {
 
     }
 
+    // ======================================== bitmap ========================================
     /**
-     *
      * @return whether operation is success or not
      */
     public boolean bitGet(String key, int offset) {
         try {
             return redisTemplate.opsForValue().getBit(key, offset);
-        }
-        catch (Exception exception) {
+        } catch (Exception exception) {
             exception.printStackTrace();
             return false;
         }
     }
 
     /**
-     *
      * @return whether operation is success or not
      */
     public boolean bitSet(String key, int offset, boolean value) {
         try {
             redisTemplate.opsForValue().setBit(key, offset, value);
             return true;
-        }
-        catch (Exception exception) {
+        } catch (Exception exception) {
             exception.printStackTrace();
             return false;
         }
     }
+
+
+
+    // ================================== zSet ==========================================
+    public Boolean zAdd(String key, String value, double score) {
+        return redisTemplate.opsForZSet().add(key, value, score);
+    }
+
+
+    public Long zAdd(String key, Set<ZSetOperations.TypedTuple<Object>> values) {
+        return redisTemplate.opsForZSet().add(key, values);
+    }
+
+
+    public Long zRemove(String key, Object... values) {
+        return redisTemplate.opsForZSet().remove(key, values);
+    }
+
+
+    public Double zIncrementScore(String key, String value, double delta) {
+        return redisTemplate.opsForZSet().incrementScore(key, value, delta);
+    }
+
+
+    public Long zRank(String key, Object value) {
+        return redisTemplate.opsForZSet().rank(key, value);
+    }
+
+
+    public Long zReverseRank(String key, Object value) {
+        return redisTemplate.opsForZSet().reverseRank(key, value);
+    }
+
+
+    public Set<Object> zRange(String key, long start, long end) {
+        return redisTemplate.opsForZSet().range(key, start, end);
+    }
+
+
+    public Set<ZSetOperations.TypedTuple<Object>> zRangeWithScores(String key, long start,
+                                                                   long end) {
+        return redisTemplate.opsForZSet().rangeWithScores(key, start, end);
+    }
+
+
+    public Set<Object> zRangeByScore(String key, double min, double max) {
+        return redisTemplate.opsForZSet().rangeByScore(key, min, max);
+    }
+
+
+
+    public Long zSize(String key) {
+        return redisTemplate.opsForZSet().size(key);
+    }
+
+
+
+    public Double zScore(String key, Object value) {
+        return redisTemplate.opsForZSet().score(key, value);
+    }
+
+    public Long zRemoveRange(String key, long start, long end) {
+        return redisTemplate.opsForZSet().removeRange(key, start, end);
+    }
+
+    public Long zRemoveRangeByScore(String key, double min, double max) {
+        return redisTemplate.opsForZSet().removeRangeByScore(key, min, max);
+    }
+
+    // ======================================== operations about multiple items ========================================
+
+    public Collection<Object> mGet(Collection<String> keys) {
+        return redisTemplate.opsForValue().multiGet(keys);
+    }
+
+    public void mSet(Map<String, Object> kvs) {
+        redisTemplate.opsForValue().multiSet(kvs);
+    }
+
+
+
+
+
 }
 
