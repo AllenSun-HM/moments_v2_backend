@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.dao.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.HashMap;
 import java.util.List;
 
 
@@ -30,21 +31,21 @@ public class PostController {
     @PostMapping()
     @RequireToken
     public JsonResult<?> addPost(HttpServletRequest request, @JsonProperty("text") String text, List<MultipartFile> photos) {
-        JsonResult<?> result;
-        boolean isAddSuccess = false;
         int uid = (Integer) request.getAttribute("logged_uid");
         try {
+            int postId;
             if (photos != null && photos.size() > 0) { // photos are uploaded
                 List<String> photoUrls = s3Service.upload(photos);
-                isAddSuccess = postService.addPostWithPhotos(uid, text, photoUrls);
+                postId = postService.addPostWithPhotos(uid, text, photoUrls);
             } else { // no photos uploaded
-                isAddSuccess = postService.addPost(uid, text);
+                postId = postService.addPost(uid, text);
             }
-            return isAddSuccess ? JsonResult.success() : JsonResult.failure(200001, "post upload failed");
-
+            HashMap<String, Integer> result = new HashMap<>();
+            result.put("post_id", postId);
+            return JsonResult.successWithData(result);
         }
         catch (Exception exception) {
-            return JsonResult.unknownFailure();
+            return JsonResult.failure(200001, "post upload failed");
         }
     }
 

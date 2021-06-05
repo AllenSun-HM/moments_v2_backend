@@ -26,39 +26,41 @@ public class PostService {
         maxPostId = this.postDao.selectMaxPostId();
     }
 
-    public boolean addPost(int uid, String text) {
+    public int addPost(int uid, String text) throws Exception {
             int postId = getPostId();
             Post post = new Post(postId, text, uid);
             int rowsAffected = postDao.insertSelective(post);
             redis.set("post:" + postId, post);
-            return rowsAffected == 1;
+            if (rowsAffected != 1) {
+                throw new Exception("rows affected != 1, upload failed");
+            }
+            return postId;
     }
 
     /**
      * insert post with photo(s)
      * @return whether the operation success or not
      */
-    public boolean addPostWithPhotos(int uid, String text, List<String> photoUrls) {
+    public int addPostWithPhotos(int uid, String text, List<String> photoUrls) throws Exception {
         int postId = getPostId();
-            Post post = new Post(postId, text, uid, photoUrls);
-            int rowsAffected = postDao.insertSelective(post);
-            if (rowsAffected == 1) {
-                // user another thread to execute redis update in order to avoid waiting for redis execution in the main thread
-                ThreadPoolManager.getInstance().execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        redis.set("post:" + postId, post);
-                    }
-                });
-                return true;
+        Post post = new Post(postId, text, uid, photoUrls);
+        int rowsAffected = postDao.insertSelective(post);
+        if (rowsAffected != 1) {
+            throw new Exception("insertion failed");
+        }
+        // user another thread to execute redis update in order to avoid waiting for redis execution in the main thread
+        ThreadPoolManager.getInstance().execute(new Runnable() {
+            @Override
+            public void run() {
+                redis.set("post:" + postId, post);
             }
-            return false;
+        });
+        return postId;
     }
 
     public Post getPost(int postId) {
 //            redis.get("post:comment:" + postId);
             Post post = (Post) redis.get("post:" + (postId));
-
             if (post != null) {
                 return post;
             }
@@ -73,12 +75,12 @@ public class PostService {
         try {
             if (start < 100) { // to avoid having big key in redis, only writes the first 100 popular posts into redis
                 List<Post> posts = (List<Post>) (Object) redis.listGet("postsWithHighestLikeCounts", start, limit);
-                if (posts != null) {
+                if (posts != null && posts.size() > 0) {
                     return posts;
                 }
             }
             List<Post>  postsInDB = postDao.getPostsWithHighestLikeCounts(start, limit);
-            redis.listMSetWithExpiration("postsWithHighestLikeCounts", (List<Object>) (Object) postsInDB.subList(0, 100), 20);
+            redis.listMSetWithExpiration("postsWithHighestLikeCounts", (List<Object>) (Object) postsInDB.subList(0, Math.min(limit, 100)), 20);
             return postsInDB;
         }
         catch (ClassCastException castException) {
@@ -121,14 +123,11 @@ public class PostService {
     }
 
     public boolean deleteComment(int commentId, int uid) throws Exception {
-        switch (postDao.removeCommentRecord(commentId, uid)) {
-            case 1:
-                return true;
-            case 0:
-                throw new Exception("illegal operation of comment deletion");
-            default:
-                return false;
+        int rowsAffected = postDao.removeCommentRecord(commentId, uid);
+        if (rowsAffected != 1) {
+            throw new Exception("comment deletion failed");
         }
+        return true;
     }
 
     private synchronized int getPostId() {

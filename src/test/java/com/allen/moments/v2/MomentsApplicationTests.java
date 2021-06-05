@@ -23,28 +23,28 @@ class MomentsApplicationTests {
     void testRedisConnection() {
         redisUtil.set("abc" , 123);
     }
-
-    @Test
-    void testThreadPool() {
-        for (int i = 0; i < 100; i++) {
-            int finalI = i;
-            Runnable r = new Runnable() {
-                @Override
-                public void run() {
-                    System.out.println(finalI);
-                }
-            };
-            ThreadPoolManager.getInstance().execute(r);
-        }
-    }
-
-    @Test
-    void writeIntoDB() throws InterruptedException {
-        for (int i = 0; i < 500; i++) {
-            Thread.sleep(10);
-            User user = new User("test" + i, "test" + i + "@test.com", 100020 + i, (int) Math.floor(Math.random() * 20), Math.random() < 0.5 ? 1 : 2, "123456");
-            userDao.insert(user);
-        }
-    }
+//
+//    @Test
+//    void testThreadPool() {
+//        for (int i = 0; i < 100; i++) {
+//            int finalI = i;
+//            Runnable r = new Runnable() {
+//                @Override
+//                public void run() {
+//                    System.out.println(finalI);
+//                }
+//            };
+//            ThreadPoolManager.getInstance().execute(r);
+//        }
+//    }
+//
+//    @Test
+//    void writeIntoDB() throws InterruptedException {
+//        for (int i = 0; i < 500; i++) {
+//            Thread.sleep(10);
+//            User user = new User("test" + i, "test" + i + "@test.com", 100020 + i, (int) Math.floor(Math.random() * 20), Math.random() < 0.5 ? 1 : 2, "123456");
+//            userDao.insert(user);
+//        }
+//    }
 
 }

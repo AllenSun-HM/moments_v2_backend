@@ -10,8 +10,8 @@ public class User {
     private transient String password;
     private String email;
     private Integer sex;
-    private List<Integer> followers = new ArrayList<>();
-    private List<Integer> followings = new ArrayList<>();
+    private List<Integer> followers;
+    private List<Integer> followings;
     private Integer followerCount;
     private String avatarURI;
 
@@ -49,6 +49,17 @@ public class User {
         this.email = email;
         this.followerCount = followerCount;
         this.avatarURI = avatarURI;
+    }
+
+    public User(Integer uid, String name, Integer age, Integer sex, String email, int followerCount, String avatarURI, String password) {
+        this.name = name;
+        this.age = age;
+        this.uid = uid;
+        this.sex = sex;
+        this.email = email;
+        this.followerCount = followerCount;
+        this.avatarURI = avatarURI;
+        this.password = password;
     }
 
     public int getUid() {

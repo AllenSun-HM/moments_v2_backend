@@ -1,6 +1,7 @@
 package com.allen.moments.v2.aop;
 
 import com.alibaba.fastjson.JSONObject;
+import com.allen.moments.v2.utils.ApplicationException;
 import com.allen.moments.v2.utils.JsonResult;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterThrowing;
@@ -22,6 +23,9 @@ public class ExceptionHandler {
                 for ( int i = 0; i < arguments.length; i++) {
                     logger.error("------->args[" + i + "]: " +  JSONObject.toJSONString(arguments[i]));
                 }
+            }
+            if (e.getClass() == ApplicationException.class) { // customized exception with err_no and message
+                return JsonResult.failure(((ApplicationException) e).getErrNo(), e.getMessage());
             }
             return JsonResult.unknownFailure();
         }  catch (Exception ex) {

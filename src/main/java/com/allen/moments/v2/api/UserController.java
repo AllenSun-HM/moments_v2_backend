@@ -4,6 +4,7 @@ import com.allen.moments.v2.model.User;
 import com.allen.moments.v2.service.S3Service;
 import com.allen.moments.v2.service.UserService;
 import com.allen.moments.v2.utils.JsonResult;
+import com.allen.moments.v2.utils.JwtUtil;
 import com.allen.moments.v2.utils.annotations.RequireToken;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +16,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
- * handle person info CRUD
+ * handle user info CRUD
  *
  */
 @RestController
@@ -24,35 +25,43 @@ import java.util.List;
 public class UserController {
     private final UserService userService;
     private final S3Service s3Service;
+    private final JwtUtil jwtUtil;
 
     @Autowired
-    public UserController(UserService userService, S3Service s3Service) {
+    public UserController(UserService userService, S3Service s3Service, JwtUtil jwtUtil) {
         this.userService = userService;
         this.s3Service = s3Service;
+        this.jwtUtil = jwtUtil;
     }
 
     private int getLoggedUid(HttpServletRequest request) {
         return (int) request.getAttribute("logged_uid");
     }
 
-    @PostMapping()
+    @PostMapping("/register")
     @RequireToken
-    public JsonResult<?> addUser(@JsonProperty("name") String name, @JsonProperty String email, @JsonProperty("sex") Integer sex, @JsonProperty("age") Integer age, @JsonProperty("password") String password) throws Exception {
-        return userService.addUser(email, name, sex, age, password);
+    public JsonResult<?> register(@JsonProperty("name") String name, @JsonProperty String email, @JsonProperty("sex") Integer sex, @JsonProperty("age") Integer age, @JsonProperty("password") String password) throws Exception {
+        User addedUser = userService.addUser(email, name, sex, age, password);
+        String token = jwtUtil.getToken(addedUser.getUid());
+        return JsonResult.successWithData(token);
     }
 
 
     @GetMapping("/{id}")
     @RequireToken
-    public User getUser(@PathVariable("id") int uid) {
-        return userService.getUser(uid);
+    public JsonResult<?> getUserById(@PathVariable("id") int uid) {
+        User user = userService.getUser(uid);
+        if (user == null) {
+            return JsonResult.failure(40001, "user does not exist");
+        }
+        return JsonResult.successWithData(user);
     }
 
-    @PostMapping("password")
+    @PostMapping("/password")
     @RequireToken
-    public String setNewPassword(int uid, @RequestParam("old_passwd") String oldPassword, @RequestParam("new_passwd") String newPassword) {
-        boolean isUpdateSuccess = userService.setNewPassword(uid, oldPassword, newPassword);
-        return isUpdateSuccess ? "success" : "failure";
+    public JsonResult<?> setNewPassword(int uid, @RequestParam("old_passwd") String oldPassword, @RequestParam("new_passwd") String newPassword) throws Exception {
+        userService.setNewPassword(uid, oldPassword, newPassword);
+        return JsonResult.success();
     }
 
     @GetMapping("/get_all")
@@ -65,26 +74,28 @@ public class UserController {
     @RequireToken
     public JsonResult<?> follow(HttpServletRequest request, @RequestParam("uid_to_follow") Integer uidToFollow) {
         int uidOfFollowed = this.getLoggedUid(request);
-        return userService.follow(uidOfFollowed, uidToFollow);
+        userService.follow(uidOfFollowed, uidToFollow);
+        return JsonResult.success();
     }
 
     @GetMapping("/{id}/followers")
     @RequireToken
     public JsonResult<?> getFollowers(@PathVariable("id") int uid) {
-        return userService.getFollower(uid);
+        return JsonResult.successWithData(userService.getFollowersId(uid));
     }
 
     @GetMapping("/{id}/followings")
     @RequireToken
     public JsonResult<?> getFollowings(@PathVariable("id") int uid) {
-        return userService.getFollowing(uid);
+        return JsonResult.successWithData(userService.getFollowingsId(uid));
     }
 
     @DeleteMapping("/unfollow/{id}")
     @RequireToken
     public JsonResult<?> unfollow(HttpServletRequest request, @PathVariable("id") int followedId) throws Exception {
         int uidOfFollower = this.getLoggedUid(request);
-        return userService.unfollow(followedId, uidOfFollower);
+        userService.unfollow(followedId, uidOfFollower);
+        return JsonResult.success();
     }
 
     @GetMapping("/rank/follower")
@@ -98,6 +109,7 @@ public class UserController {
     public JsonResult<?> setCustomizedAvatar(HttpServletRequest request, MultipartFile avatar) throws Exception {
         int uid = this.getLoggedUid(request);
         String avatarURI = s3Service.upload(avatar);
-        return userService.addCustomizedAvatar(uid, avatarURI);
+        userService.addCustomizedAvatar(uid, avatarURI);
+        return JsonResult.successWithData(avatarURI);
     }
 }

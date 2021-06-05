@@ -48,6 +48,38 @@ public interface UserDao {
     })
     User selectByUid(Integer uid);
 
+    @Select({
+            "SELECT",
+            "uid, name, age, sex, email, follower_count, avatar_uri, password",
+            "FROM user",
+            "WHERE email = #{email, jdbcType=VARCHAR}"
+    })
+    @Results({
+            @Result(column="uid", property="uid", jdbcType=JdbcType.INTEGER, id=true),
+            @Result(column="name", property="name", jdbcType=JdbcType.VARCHAR),
+            @Result(column="age", property="age", jdbcType=JdbcType.INTEGER),
+            @Result(column="sex", property="sex", jdbcType=JdbcType.INTEGER),
+            @Result(column="email", property="email", jdbcType=JdbcType.VARCHAR),
+            @Result(column="follower_count", property="followerCount", jdbcType=JdbcType.INTEGER),
+            @Result(column="avatar_uri", property="avatarURI", jdbcType=JdbcType.VARCHAR),
+            @Result(column = "password", property = "password", jdbcType = JdbcType.VARCHAR)
+    })
+    User selectByEmail(String email);
+
+    @Select({
+            "select",
+            "uid, name, age, sex. email",
+            "from user",
+    })
+    @Results({
+            @Result(column="uid", property="uid", jdbcType=JdbcType.VARCHAR, id=true),
+            @Result(column="name", property="name", jdbcType=JdbcType.VARCHAR),
+            @Result(column="age", property="age", jdbcType=JdbcType.INTEGER),
+            @Result(column="sex", property="sex", jdbcType=JdbcType.INTEGER),
+            @Result(column="email", property="email", jdbcType=JdbcType.VARCHAR)
+    })
+    List<User> selectAll();
+
 
     @Select({
             "SELECT",
@@ -70,8 +102,6 @@ public interface UserDao {
     @UpdateProvider(type=UserSqlProvider.class, method="updateByPrimaryKeySelective")
     int updateByPrimaryKeySelective(User record);
 
-
-
     @Update({
                     "update user",
                     "set name = #{name,jdbcType=VARCHAR},",
@@ -83,31 +113,14 @@ public interface UserDao {
     int updateByUid(User record);
 
 
-
     @Update(
             {
                     "update user",
                     "set password = #{newPassword,jdbcType=VARCHAR},",
-                    "where uid = #{uid, jdbcType=INTEGER}",
+                    "where uid = #{uid, jdbcType=INTEGER} AND password = #{oldPassword, jdbcType=VARCHAR}",
             }
     )
-    int updatePassword(int uid, String newPassword);
-
-
-
-    @Select({
-                    "select",
-                    "uid, name, age, sex. email",
-                    "from user",
-    })
-    @Results({
-            @Result(column="uid", property="uid", jdbcType=JdbcType.VARCHAR, id=true),
-            @Result(column="name", property="name", jdbcType=JdbcType.VARCHAR),
-            @Result(column="age", property="age", jdbcType=JdbcType.INTEGER),
-            @Result(column="sex", property="sex", jdbcType=JdbcType.INTEGER),
-            @Result(column="email", property="email", jdbcType=JdbcType.VARCHAR)
-    })
-    List<User> selectAll();
+    int updatePassword(int uid, String oldPassword, String newPassword);
 
 
     @Select(
@@ -119,25 +132,6 @@ public interface UserDao {
     )
     int getMaxUid();
 
-
-
-    @Select({
-                    "SELECT",
-                    "uid, name, age, sex, email, follower_count, avatar_uri",
-                    "FROM user",
-                    "WHERE email = #{email, jdbcType=VARCHAR}"
-    })
-        @Results({
-                @Result(column="uid", property="uid", jdbcType=JdbcType.INTEGER, id=true),
-                @Result(column="name", property="name", jdbcType=JdbcType.VARCHAR),
-                @Result(column="age", property="age", jdbcType=JdbcType.INTEGER),
-                @Result(column="sex", property="sex", jdbcType=JdbcType.INTEGER),
-                @Result(column="email", property="email", jdbcType=JdbcType.VARCHAR),
-                @Result(column="follower_count", property="followerCount", jdbcType=JdbcType.INTEGER),
-                @Result(column="avatar_uri", property="avatarURI", jdbcType=JdbcType.VARCHAR)
-
-    })
-    User selectByEmail(String email);
 
     @Insert({
                     "INSERT INTO follow_relations",
@@ -158,7 +152,7 @@ public interface UserDao {
                     "SELECT",
                     "followed_id",
                     "FROM follow_relations",
-                    "WHERE follower_id = {uid, jdbcType=INTEGER}"
+                    "WHERE follower_id = #{uid, jdbcType=INTEGER}"
     })
     List<Integer> selectFollowingsById(int uid);
 

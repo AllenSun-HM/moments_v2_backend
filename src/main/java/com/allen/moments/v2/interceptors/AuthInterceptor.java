@@ -68,7 +68,7 @@ public class AuthInterceptor implements HandlerInterceptor {
                 catch (Exception exception) {
                     ObjectMapper mapper = new ObjectMapper();
                     System.err.println(exception.getMessage());
-                    JsonResult<?> jsonResult = JsonResult.failure(10000, "user not logged");// customised pojo for error json message
+                    JsonResult<?> jsonResult = JsonResult.failure(10000, "user not logged or login expired");// customised pojo for error json message
                     response.setContentType("application/json");
                     response.setCharacterEncoding("utf-8");
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
