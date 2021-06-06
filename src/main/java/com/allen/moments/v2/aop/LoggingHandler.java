@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
         private Logger logger = LoggerFactory.getLogger(this.getClass());
 
         /**
-         * 在方法调用之前，打印入参
+         *
          */
         @Before(value = "execution(public * com.allen.moments.v2.api.*.*(..))")
         public void before(JoinPoint joinPoint) {

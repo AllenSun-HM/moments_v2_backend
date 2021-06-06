@@ -9,6 +9,7 @@ import com.allen.moments.v2.utils.ThreadPoolManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -29,7 +30,7 @@ public class UserService {
     private static int maxUid;
 
     static {
-        System.out.println("User service initialized");
+        System.out.println(("User service initialized at" + LocalDateTime.now()));
     }
 
     @Autowired

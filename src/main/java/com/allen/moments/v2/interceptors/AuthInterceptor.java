@@ -25,13 +25,12 @@ public class AuthInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object object) throws Exception {
-        // 如果不是映射到方法直接通过
         if (!(object instanceof HandlerMethod)) {
             return true;
         }
         HandlerMethod handlerMethod = (HandlerMethod) object;
         Method method = handlerMethod.getMethod();
-        //检查是否有passtoken注释，有则跳过认证
+        // allow access to methods annotated with passToken
         if (method.isAnnotationPresent(PassToken.class) ) {
             PassToken passToken = method.getAnnotation(PassToken.class);
             if (passToken == null) {
@@ -41,20 +40,19 @@ public class AuthInterceptor implements HandlerInterceptor {
                 return true;
             }
         }
-        //检查有没有需要用户权限的注解
         if (method.isAnnotationPresent(RequireToken.class) || method.getClass().isAnnotationPresent(RequireToken.class)) {
             RequireToken userLoginToken = method.getAnnotation(RequireToken.class);
             if (userLoginToken == null){
                 userLoginToken = method.getClass().getAnnotation(RequireToken.class);
             }
             if (userLoginToken.isTokenNeeded()) {
-                // 执行认证
+                // authenticate user
                 try {
                     String token = request.getHeader("Authorization").substring(7); // 从 http 请求头中取出 token
                     if (token == null) {
                         throw new RuntimeException("no token found, login is needed");
                     }
-                    // 验证 token
+                    // authenticate token
                     JWTVerifier jwtVerifier = com.auth0.jwt.JWT.require(Algorithm.HMAC256("${application.jwt.secret_key}")).build();
                     DecodedJWT jwt = jwtVerifier.verify(token);
                     int uid;

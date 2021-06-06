@@ -1,5 +1,7 @@
 package com.allen.moments.v2.utils;
 
+import com.allen.moments.v2.model.ErrorType;
+
 import java.io.Serializable;
 
 public class JsonResult<T> implements Serializable {
@@ -15,8 +17,8 @@ public class JsonResult<T> implements Serializable {
      */
     private JsonResult(boolean isSuccess) {
         this.isSuccess = isSuccess ? 1 : 0;
-        this.err_no = isSuccess ? 0 : 1;
-        this.err_tips = isSuccess ? "" : "unknown error";
+        this.err_no = isSuccess ? 0 : ErrorType.UNKNOWN_ERROR.errNo;
+        this.err_tips = isSuccess ? "" : ErrorType.UNKNOWN_ERROR.message;
     }
 
     /**
@@ -36,7 +38,6 @@ public class JsonResult<T> implements Serializable {
     private JsonResult(T data) {
         this.data = data;
         this.err_no = 0;
-
         this.err_tips = "";
     }
 

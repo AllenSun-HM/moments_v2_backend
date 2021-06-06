@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,6 +14,10 @@ import java.util.List;
 public class S3Service {
     @Qualifier("client")
     private final S3Client s3Client;
+
+    static {
+        System.out.println(("S3 service initialized at" + LocalDateTime.now()));
+    }
 
     @Autowired()
     public S3Service(S3Client s3Client) {

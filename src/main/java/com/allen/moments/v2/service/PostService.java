@@ -1,13 +1,17 @@
 package com.allen.moments.v2.service;
 
 import com.allen.moments.v2.dao.PostDao;
+import com.allen.moments.v2.model.DML;
 import com.allen.moments.v2.model.Post;
 import com.allen.moments.v2.redis.RedisUtil;
 import com.allen.moments.v2.utils.ThreadPoolManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
+
+import static com.allen.moments.v2.utils.error_handler.DBCheckedExceptionHandler.checkIfRowsAffectedIsOne;
 
 @Service
 public class PostService {
@@ -16,7 +20,7 @@ public class PostService {
     private static volatile Integer maxPostId;
 
     static {
-        System.out.println("Post service initialized");
+        System.out.println(("Post service initialized at" + LocalDateTime.now()));
     }
 
     @Autowired
@@ -31,9 +35,7 @@ public class PostService {
             Post post = new Post(postId, text, uid);
             int rowsAffected = postDao.insertSelective(post);
             redis.set("post:" + postId, post);
-            if (rowsAffected != 1) {
-                throw new Exception("rows affected != 1, upload failed");
-            }
+            checkIfRowsAffectedIsOne(rowsAffected, DML.INSERT);
             return postId;
     }
 
@@ -45,9 +47,7 @@ public class PostService {
         int postId = getPostId();
         Post post = new Post(postId, text, uid, photoUrls);
         int rowsAffected = postDao.insertSelective(post);
-        if (rowsAffected != 1) {
-            throw new Exception("insertion failed");
-        }
+        checkIfRowsAffectedIsOne(rowsAffected, DML.INSERT);
         // user another thread to execute redis update in order to avoid waiting for redis execution in the main thread
         ThreadPoolManager.getInstance().execute(new Runnable() {
             @Override
@@ -118,15 +118,15 @@ public class PostService {
         return postDao.selectUidsThatLikedPost(postId, start, limit);
     }
 
-    public boolean addComment(int commentedBy, int postId, String comment) {
-        return postDao.insertCommentRecord(postId, comment, commentedBy) == 1;
+    public boolean addComment(int commentedBy, int postId, String comment) throws Exception {
+        int rowsAffected = postDao.insertCommentRecord(postId, comment, commentedBy);
+        checkIfRowsAffectedIsOne(rowsAffected, DML.INSERT);
+        return true;
     }
 
     public boolean deleteComment(int commentId, int uid) throws Exception {
         int rowsAffected = postDao.removeCommentRecord(commentId, uid);
-        if (rowsAffected != 1) {
-            throw new Exception("comment deletion failed");
-        }
+        checkIfRowsAffectedIsOne(rowsAffected, DML.DELETE);
         return true;
     }
 
