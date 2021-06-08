@@ -1,10 +1,10 @@
 package com.allen.moments.v2.aop;
 
 import com.alibaba.fastjson.JSONObject;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
     @Component
     public class LoggingHandler {
 
-        private Logger logger = LoggerFactory.getLogger(this.getClass());
+        private final Logger logger =  LogManager.getLogger(this.getClass());
 
         /**
          *
@@ -22,11 +22,7 @@ import org.springframework.stereotype.Component;
             String className = joinPoint.getTarget().getClass().getName();
             String methodName = joinPoint.getSignature().getName();
             Object[] args = joinPoint.getArgs();
-            StringBuilder params = new StringBuilder();
-            for (Object arg : args) {
-                params.append(arg).append(" ");
-            }
-            logger.info("class " + className + "'s " + methodName + " has parameter(s)：" + JSONObject.toJSONString(params));
+            logger.info("class " + className + "'s " + methodName + " has parameter(s)：" + JSONObject.toJSONString(args));
         }
 
         /**

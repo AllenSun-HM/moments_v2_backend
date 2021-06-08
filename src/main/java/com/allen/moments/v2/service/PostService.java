@@ -5,13 +5,13 @@ import com.allen.moments.v2.model.DML;
 import com.allen.moments.v2.model.Post;
 import com.allen.moments.v2.redis.RedisUtil;
 import com.allen.moments.v2.utils.ThreadPoolManager;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
-import static com.allen.moments.v2.utils.error_handler.DBCheckedExceptionHandler.checkIfRowsAffectedIsOne;
+import static com.allen.moments.v2.utils.error_handler.DBExceptionChecker.checkIfRowsAffectedIsOne;
 
 @Service
 public class PostService {
@@ -20,7 +20,7 @@ public class PostService {
     private static volatile Integer maxPostId;
 
     static {
-        System.out.println(("Post service initialized at" + LocalDateTime.now()));
+        LogManager.getLogger(PostService.class).info("Post service initialized");
     }
 
     @Autowired
@@ -131,7 +131,7 @@ public class PostService {
     }
 
     private synchronized int getPostId() {
-        return ++maxPostId;
+        return maxPostId++;
     }
 
 }

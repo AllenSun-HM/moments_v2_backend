@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Configuration status="WARN" monitorInterval="30">
+    <Properties>
+        <Property name="App">moments-app</Property>
+        <Property name="logDir">logs</Property>
+        <Property name="splitSize">30 MB</Property>
+    </Properties>
+
+    <Appenders>
+        <Console name="console" target="SYSTEM_OUT">
+            <Filters>
+                <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
+                <ThresholdFilter level="error" onMatch="ACCEPT" onMismatch="DENY"/>
+                <ThresholdFilter level="warn" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %highlight{%-5level %logger{36} - %msg%n}{FATAL=Bright Red, ERROR=Bright Magenta, WARN=Bright Yellow, INFO=Bright Green, DEBUG=Bright Cyan, TRACE=Bright White}"/>
+        </Console>
+
+        <RollingRandomAccessFile name="infoLog" fileName="${logDir}/${App}-info.log" immediateFlush="false"
+                                 filePattern="${logDir}/$${date:yyyy-MM}/${App}-info-%d{MM-dd-yyyy}-%i.log.gz"
+                                 append="true">
+            <PatternLayout pattern="%d{yyyy-MM-dd 'at' HH:mm:ss z} [%t] %-5level %logger{36} %L %M - %msg%xEx%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="6" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="${splitSize}"/>
+            </Policies>
+            <Filters>
+                <ThresholdFilter level="error" onMatch="DENY" onMismatch="NEUTRAL"/>
+                <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            <DefaultRolloverStrategy max="50"/>
+        </RollingRandomAccessFile>
+
+        <RollingRandomAccessFile name="errorLog" fileName="${logDir}/${App}-error.log" immediateFlush="false"
+                                 filePattern="${logDir}/$${date:yyyy-MM}/${App}-error-%d{MM-dd-yyyy}-%i.log.gz"
+                                 append="false">
+            <PatternLayout pattern="%d{yyyy-MM-dd 'at' HH:mm:ss z} [%t] %-5level %logger{36} %L %M - %msg%xEx%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="6" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="${splitSize}"/>
+            </Policies>
+            <Filters>
+                <ThresholdFilter level="error" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            <DefaultRolloverStrategy max="50"/>
+        </RollingRandomAccessFile>
+    </Appenders>
+
+    <Loggers>
+        <Root>
+            <appender-ref ref="infoLog"/>
+            <appender-ref ref="errorLog"/>
+            <appender-ref ref="console"/>
+        </Root>
+
+        <logger name="org.springframework" level="info" additivity="true">
+        </logger>
+
+        <logger name="com.allen.moments.v2" level="info" additivity="true">
+        </logger>
+
+
+    </Loggers>
+</Configuration>
