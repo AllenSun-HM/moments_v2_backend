@@ -10,6 +10,7 @@ public class JsonResult<T> implements Serializable {
     private int err_no;
     private int isSuccess;
     private String err_tips;
+    private long ts;
 
     /**
      * constructs a JsonResult object representing successful operation
@@ -19,6 +20,7 @@ public class JsonResult<T> implements Serializable {
         this.isSuccess = isSuccess ? 1 : 0;
         this.err_no = isSuccess ? 0 : ErrorType.UNKNOWN_ERROR.errNo;
         this.err_tips = isSuccess ? "" : ErrorType.UNKNOWN_ERROR.message;
+        this.ts = new java.util.Date().getTime();
     }
 
     /**
@@ -29,6 +31,7 @@ public class JsonResult<T> implements Serializable {
     private JsonResult(int err_no, String err_tips) {
         this.err_no = err_no;
         this.err_tips = err_tips;
+        this.ts = new java.util.Date().getTime();
     }
 
     /**
@@ -39,6 +42,7 @@ public class JsonResult<T> implements Serializable {
         this.data = data;
         this.err_no = 0;
         this.err_tips = "";
+        this.ts = new java.util.Date().getTime();
     }
 
     public static JsonResult<?> failure(int err_no, String err_tips) {
@@ -64,11 +68,11 @@ public class JsonResult<T> implements Serializable {
         this.data = data;
     }
 
-    public int getErr_no() {
+    public int getErrNo() {
         return err_no;
     }
 
-    public void setErr_no(int err_no) {
+    public void setErrNo(int err_no) {
         this.err_no = err_no;
     }
 
@@ -80,11 +84,11 @@ public class JsonResult<T> implements Serializable {
         this.isSuccess = isSuccess;
     }
 
-    public String getErr_tips() {
+    public String getErrTips() {
         return err_tips;
     }
 
-    public void setErr_tips(String err_tips) {
+    public void setErrTips(String err_tips) {
         this.err_tips = err_tips;
     }
 

@@ -5,10 +5,10 @@ import com.allen.moments.v2.model.ErrorType;
 import com.allen.moments.v2.model.User;
 import com.allen.moments.v2.utils.ApplicationException;
 import com.allen.moments.v2.utils.JwtUtil;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 
 @Service
 public class AuthService {
@@ -16,13 +16,12 @@ public class AuthService {
 //    private final RedisUtil redisUtil;
 
     static {
-        System.out.println(("Authentication service initialized at" + LocalDateTime.now()));
+        LogManager.getLogger(AuthService.class).info("Authentication service initialized");
     }
 
     @Autowired
     public AuthService(UserDao userDao, JwtUtil jwtUtil) {
         this.userDao = userDao;
-//        this.redisUtil = redisUtil;
     }
 
     public User login(String email, String password) {

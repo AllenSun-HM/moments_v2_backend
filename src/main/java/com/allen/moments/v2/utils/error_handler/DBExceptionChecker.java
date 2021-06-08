@@ -4,7 +4,7 @@ import com.allen.moments.v2.model.DML;
 import com.allen.moments.v2.model.ErrorType;
 import com.allen.moments.v2.utils.ApplicationException;
 
-public class DBCheckedExceptionHandler {
+public class DBExceptionChecker {
     public static void checkIfRowsAffectedIsOne(int rowsAffected, ErrorType zeroRowAffectedErrorType) throws Exception {
         if (rowsAffected == 0) {
             throw new ApplicationException(zeroRowAffectedErrorType.errNo, zeroRowAffectedErrorType.message);

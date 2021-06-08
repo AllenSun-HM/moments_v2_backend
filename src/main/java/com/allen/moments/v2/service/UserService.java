@@ -6,14 +6,16 @@ import com.allen.moments.v2.model.User;
 import com.allen.moments.v2.redis.RedisUtil;
 import com.allen.moments.v2.utils.ApplicationException;
 import com.allen.moments.v2.utils.ThreadPoolManager;
+import org.apache.logging.log4j.LogManager;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
-import static com.allen.moments.v2.utils.error_handler.DBCheckedExceptionHandler.checkIfRowsAffectedIsOne;
+import static com.allen.moments.v2.utils.error_handler.DBExceptionChecker.checkIfRowsAffectedIsOne;
 
 
 /**
@@ -30,7 +32,7 @@ public class UserService {
     private static int maxUid;
 
     static {
-        System.out.println(("User service initialized at" + LocalDateTime.now()));
+        LogManager.getLogger(UserService.class).info("User service initialized");
     }
 
     @Autowired
@@ -61,7 +63,8 @@ public class UserService {
             checkIfRowsAffectedIsOne(rowsAffected, ErrorType.USER_UNIDENTIFIED);
     }
 
-    public User getUser(int uid) {
+    public @Nullable
+    User getUser(@NotNull int uid) {
             User cachedUser = (User) redis.hashGet("allUsers", String.valueOf(uid));
             if (cachedUser != null) {
                 return cachedUser;

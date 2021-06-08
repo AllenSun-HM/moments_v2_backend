@@ -5,13 +5,14 @@ import com.allen.moments.v2.model.DML;
 import com.allen.moments.v2.model.Post;
 import com.allen.moments.v2.redis.RedisUtil;
 import com.allen.moments.v2.utils.ThreadPoolManager;
+import org.apache.logging.log4j.LogManager;
+import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
-import static com.allen.moments.v2.utils.error_handler.DBCheckedExceptionHandler.checkIfRowsAffectedIsOne;
+import static com.allen.moments.v2.utils.error_handler.DBExceptionChecker.checkIfRowsAffectedIsOne;
 
 @Service
 public class PostService {
@@ -20,7 +21,7 @@ public class PostService {
     private static volatile Integer maxPostId;
 
     static {
-        System.out.println(("Post service initialized at" + LocalDateTime.now()));
+        LogManager.getLogger(PostService.class).info("Post service initialized");
     }
 
     @Autowired
@@ -39,6 +40,7 @@ public class PostService {
             return postId;
     }
 
+
     /**
      * insert post with photo(s)
      * @return whether the operation success or not
@@ -48,8 +50,7 @@ public class PostService {
         Post post = new Post(postId, text, uid, photoUrls);
         int rowsAffected = postDao.insertSelective(post);
         checkIfRowsAffectedIsOne(rowsAffected, DML.INSERT);
-        // user another thread to execute redis update in order to avoid waiting for redis execution in the main thread
-        ThreadPoolManager.getInstance().execute(new Runnable() {
+        ThreadPoolManager.getInstance().execute(new Runnable() {  // user another thread to execute redis update in order to avoid waiting for redis execution in the main thread
             @Override
             public void run() {
                 redis.set("post:" + postId, post);
@@ -57,6 +58,7 @@ public class PostService {
         });
         return postId;
     }
+
 
     public Post getPost(int postId) {
 //            redis.get("post:comment:" + postId);
@@ -67,9 +69,11 @@ public class PostService {
             return postDao.selectByPrimaryKey(postId);
     }
 
+
     public List<Post> getAllPosts() {
         return postDao.selectAllPosts();
     }
+
 
     public List<Post> getPostsWithHighestLikeCounts(int start, int limit) {
         try {
@@ -79,7 +83,7 @@ public class PostService {
                     return posts;
                 }
             }
-            List<Post>  postsInDB = postDao.getPostsWithHighestLikeCounts(start, limit);
+            List<Post> postsInDB = postDao.getPostsWithHighestLikeCounts(start, limit);
             redis.listMSetWithExpiration("postsWithHighestLikeCounts", (List<Object>) (Object) postsInDB.subList(0, Math.min(limit, 100)), 20);
             return postsInDB;
         }
@@ -87,6 +91,7 @@ public class PostService {
             return null;
         }
     }
+
 
     /**
      * like a post or unlike a post
@@ -114,9 +119,11 @@ public class PostService {
         return false;
     }
 
+
     public List<Integer> getUsersWhoLikedPosts(int postId, int start, int limit) {
         return postDao.selectUidsThatLikedPost(postId, start, limit);
     }
+
 
     public boolean addComment(int commentedBy, int postId, String comment) throws Exception {
         int rowsAffected = postDao.insertCommentRecord(postId, comment, commentedBy);
@@ -124,14 +131,15 @@ public class PostService {
         return true;
     }
 
+
     public boolean deleteComment(int commentId, int uid) throws Exception {
         int rowsAffected = postDao.removeCommentRecord(commentId, uid);
         checkIfRowsAffectedIsOne(rowsAffected, DML.DELETE);
         return true;
     }
 
-    private synchronized int getPostId() {
-        return ++maxPostId;
-    }
 
+    private synchronized int getPostId() {
+        return maxPostId++;
+    }
 }

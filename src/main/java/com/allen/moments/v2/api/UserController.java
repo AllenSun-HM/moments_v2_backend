@@ -6,7 +6,6 @@ import com.allen.moments.v2.service.UserService;
 import com.allen.moments.v2.utils.JsonResult;
 import com.allen.moments.v2.utils.JwtUtil;
 import com.allen.moments.v2.utils.annotations.RequireToken;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -40,7 +39,7 @@ public class UserController {
 
     @PostMapping("/register")
     @RequireToken
-    public JsonResult<?> register(@JsonProperty("name") String name, @JsonProperty String email, @JsonProperty("sex") Integer sex, @JsonProperty("age") Integer age, @JsonProperty("password") String password) throws Exception {
+    public JsonResult<?> register(@RequestBody String name, @RequestBody String email, @RequestBody int sex, @RequestBody int age, @RequestBody String password) throws Exception {
         User addedUser = userService.addUser(email, name, sex, age, password);
         String token = jwtUtil.getToken(addedUser.getUid());
         return JsonResult.successWithData(token);
@@ -59,7 +58,8 @@ public class UserController {
 
     @PostMapping("/password")
     @RequireToken
-    public JsonResult<?> setNewPassword(int uid, @RequestParam("old_passwd") String oldPassword, @RequestParam("new_passwd") String newPassword) throws Exception {
+    public JsonResult<?> setNewPassword(HttpServletRequest request, @RequestParam("old_passwd") String oldPassword, @RequestParam("new_passwd") String newPassword) throws Exception {
+        int uid = (int) request.getAttribute("loggedUid");
         userService.setNewPassword(uid, oldPassword, newPassword);
         return JsonResult.success();
     }
@@ -72,7 +72,7 @@ public class UserController {
 
     @PostMapping("/follow")
     @RequireToken
-    public JsonResult<?> follow(HttpServletRequest request, @RequestParam("uid_to_follow") Integer uidToFollow) {
+    public JsonResult<?> follow(HttpServletRequest request, @RequestParam("uid_to_follow") int uidToFollow) {
         int uidOfFollowed = this.getLoggedUid(request);
         userService.follow(uidOfFollowed, uidToFollow);
         return JsonResult.success();
@@ -100,13 +100,13 @@ public class UserController {
 
     @GetMapping("/rank/follower")
     @RequireToken
-    public JsonResult<?> getPopularUsers(HttpServletRequest request, int start, int limit) throws Exception {
+    public JsonResult<?> getPopularUsers(HttpServletRequest request, @RequestParam int start, @RequestParam int limit) throws Exception {
         return JsonResult.successWithData(userService.selectUsersOrderByFollowerCounts(start, limit));
     }
 
     @PostMapping("/avatar")
     @RequireToken
-    public JsonResult<?> setCustomizedAvatar(HttpServletRequest request, MultipartFile avatar) throws Exception {
+    public JsonResult<?> setCustomizedAvatar(HttpServletRequest request, @RequestBody MultipartFile avatar) throws Exception {
         int uid = this.getLoggedUid(request);
         String avatarURI = s3Service.upload(avatar);
         userService.addCustomizedAvatar(uid, avatarURI);

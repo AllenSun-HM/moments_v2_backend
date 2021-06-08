@@ -29,7 +29,6 @@ public class ExceptionHandler {
             }
             return JsonResult.unknownFailure();
         }  catch (Exception ex) {
-            //记录本地异常日志
             logger.error("------->exception occured!");
             logger.error("------->exception message:{}", ex.getMessage());
             return JsonResult.unknownFailure();

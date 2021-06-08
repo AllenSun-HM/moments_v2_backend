@@ -11,8 +11,8 @@ import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.RedisClusterConfiguration;
 import org.springframework.data.redis.connection.RedisNode;
-import org.springframework.data.redis.connection.RedisSentinelConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
@@ -43,17 +43,16 @@ public class RedisConfig {
      * @Description:  add sentinel config
      */
     @Bean
-    public RedisSentinelConfiguration configuration() {
-        RedisSentinelConfiguration redisConfig = new RedisSentinelConfiguration();
-        redisConfig.setMaster(redisProperties.getSentinel().getMaster());
+    public RedisClusterConfiguration configuration() {
+        RedisClusterConfiguration redisConfig = new RedisClusterConfiguration();
 //      redisConfig.setPassword(RedisPassword.of(redisConfigThree.getPassword()));
         if(redisProperties.getSentinel().getNodes()!=null) {
-            ArrayList<RedisNode> sentinelNode=new ArrayList<RedisNode>();
-            for(String sen : redisProperties.getSentinel().getNodes()) {
-                String[] arr = sen.split(":");
-                sentinelNode.add(new RedisNode(arr[0],Integer.parseInt(arr[1])));
+            ArrayList<RedisNode> nodes =new ArrayList<RedisNode>();
+            for(String sen : redisProperties.getCluster().getNodes()) {
+                String[] hostWithPort = sen.split(":");
+                nodes.add(new RedisNode(hostWithPort[0], Integer.parseInt(hostWithPort[1])));
             }
-            redisConfig.setSentinels(sentinelNode);
+            redisConfig.setClusterNodes(nodes);
         }
         return redisConfig;
     }
@@ -61,7 +60,7 @@ public class RedisConfig {
 
     @Bean("RedisConnectionFactory")
     public LettuceConnectionFactory RedisConnectionFactory(@Qualifier("poolConfig") GenericObjectPoolConfig config,
-                                                             @Qualifier("configuration") RedisSentinelConfiguration redisConfig) {//注意传入的对象名和类型RedisSentinelConfiguration
+                                                             @Qualifier("configuration") RedisClusterConfiguration redisConfig) {//注意传入的对象名和类型RedisSentinelConfiguration
         LettuceClientConfiguration clientConfiguration = LettucePoolingClientConfiguration.builder().poolConfig(config).build();
         return new LettuceConnectionFactory(redisConfig, clientConfiguration);
     }

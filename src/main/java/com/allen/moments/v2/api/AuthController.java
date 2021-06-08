@@ -5,9 +5,9 @@ import com.allen.moments.v2.service.AuthService;
 import com.allen.moments.v2.utils.JsonResult;
 import com.allen.moments.v2.utils.JwtUtil;
 import com.allen.moments.v2.utils.annotations.PassToken;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -30,7 +30,7 @@ public class AuthController {
 
     @PassToken
     @PostMapping("")
-    public JsonResult<?> login(HttpServletRequest request, @JsonProperty("email") String email, @JsonProperty("password") String password) {
+    public JsonResult<?> login(HttpServletRequest request, @RequestBody String email, @RequestBody String password) {
         String token = request.getHeader("token");
         if (token != null) {
             return JsonResult.failure(100002, "user already logged in");

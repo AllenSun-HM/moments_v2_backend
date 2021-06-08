@@ -6,7 +6,6 @@ import com.allen.moments.v2.utils.annotations.PassToken;
 import com.allen.moments.v2.utils.annotations.RequireToken;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,12 +45,12 @@ public class AuthInterceptor implements HandlerInterceptor {
                 userLoginToken = method.getClass().getAnnotation(RequireToken.class);
             }
             if (userLoginToken.isTokenNeeded()) {
-                // authenticate user
-                try {
-                    String token = request.getHeader("Authorization").substring(7); // 从 http 请求头中取出 token
-                    if (token == null) {
+                try {  // authenticate user
+                    String authorizationHeader = request.getHeader("Authorization");
+                    if (authorizationHeader == null) {
                         throw new RuntimeException("no token found, login is needed");
                     }
+                    String token = authorizationHeader.substring(7);
                     // authenticate token
                     JWTVerifier jwtVerifier = com.auth0.jwt.JWT.require(Algorithm.HMAC256("${application.jwt.secret_key}")).build();
                     DecodedJWT jwt = jwtVerifier.verify(token);

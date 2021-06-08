@@ -19,10 +19,11 @@ class MomentsApplicationTests {
     void contextLoads() {
     }
 
-    @Test
-    void testRedisConnection() {
-        redisUtil.set("abc" , 123);
-    }
+
+//    @Test
+//    void testRedisConnection() {
+//        redisUtil.set("abc" , 123);
+//    }
 //
 //    @Test
 //    void testThreadPool() {

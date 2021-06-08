@@ -14,6 +14,7 @@ public enum ErrorType implements Serializable {
 
     DIRTY_DATA(900000, "dirty data exists"),
     DML_ERR(900001, "DML error");
+
     public final int errNo;
     public final String message;
 

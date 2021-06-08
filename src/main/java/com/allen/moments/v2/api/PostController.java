@@ -5,7 +5,6 @@ import com.allen.moments.v2.service.PostService;
 import com.allen.moments.v2.service.S3Service;
 import com.allen.moments.v2.utils.JsonResult;
 import com.allen.moments.v2.utils.annotations.RequireToken;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,7 +29,7 @@ public class PostController {
 
     @PostMapping()
     @RequireToken
-    public JsonResult<?> addPost(HttpServletRequest request, @JsonProperty("text") String text, List<MultipartFile> photos) {
+    public JsonResult<?> addPost(HttpServletRequest request, @RequestBody String text, @RequestBody List<MultipartFile> photos) {
         int uid = (Integer) request.getAttribute("logged_uid");
         try {
             int postId;
@@ -73,7 +72,7 @@ public class PostController {
 
     @GetMapping("like/{#postId}")
     @RequireToken()
-    public JsonResult<?> getUidsWhoLikedThis(@PathVariable("postId")  Integer postId, Integer start, Integer limit) {
+    public JsonResult<?> getUidsWhoLikedThis(@PathVariable("postId") Integer postId, @RequestParam Integer start, @RequestParam Integer limit) {
         if (postId == null || start == null || limit == null) {
             return JsonResult.failure(200010, "illegal query parameter");
         }
@@ -104,7 +103,7 @@ public class PostController {
 
     @PostMapping("/comment/{postId}")
     @RequireToken
-    public JsonResult<?> addComment(HttpServletRequest request, HttpServletResponse response, @PathVariable("postId") Integer postId, String comment) {
+    public JsonResult<?> addComment(HttpServletRequest request, HttpServletResponse response, @PathVariable("postId") Integer postId, @RequestBody  String comment) {
         int uid = (Integer) request.getAttribute("logged_uid");
         JsonResult<?> result;
         try {
@@ -154,7 +153,7 @@ public class PostController {
 
     @GetMapping("/rank/like_count")
     @RequireToken
-    public JsonResult<?> getPostsWithHighestLikeCounts(Integer start, Integer limit) {
+    public JsonResult<?> getPostsWithHighestLikeCounts(@RequestParam Integer start, @RequestParam Integer limit) {
         if (start == null || limit == null) {
             return JsonResult.failure(200010, "illegal query parameter");
         }

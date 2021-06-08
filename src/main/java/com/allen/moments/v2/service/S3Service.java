@@ -1,12 +1,12 @@
 package com.allen.moments.v2.service;
 
 import com.allen.moments.v2.utils.S3Client;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,7 +16,7 @@ public class S3Service {
     private final S3Client s3Client;
 
     static {
-        System.out.println(("S3 service initialized at" + LocalDateTime.now()));
+        LogManager.getLogger(S3Service.class).info("S3 service initialized");
     }
 
     @Autowired()

@@ -1,6 +1,12 @@
 package com.allen.moments.v2.model;
 
+import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.List;
+
 public class Comment {
+
     private Integer commentId;
 
     private Integer postid;
