@@ -14,5 +14,4 @@ I built this project while learning and using SpringBoot, Redis, and MySQL.
 
 ## TODOS
   1. add ElasticSearch for user & post searching feature;
-  2. use SpringBoot AOP to complete logging & exception handling feature;
   2. configure MySQL clusters to separate db-read and db-write to MySQL master node and slave node;
