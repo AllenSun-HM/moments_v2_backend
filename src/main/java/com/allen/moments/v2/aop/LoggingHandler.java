@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
         private final Logger logger =  LogManager.getLogger(this.getClass());
 
         /**
-         *
+         before method execute, print parameters
          */
         @Before(value = "execution(public * com.allen.moments.v2.api.*.*(..))")
         public void before(JoinPoint joinPoint) {
@@ -26,7 +26,7 @@ import org.springframework.stereotype.Component;
         }
 
         /**
-         * after method return, print returned value
+         after method return, print returned value
          */
         @AfterReturning(value = "execution(public * com.allen.moments.v2.api.*.*(..))", returning = "returnVal")
         public void afterReturning(JoinPoint joinPoint, Object returnVal) {

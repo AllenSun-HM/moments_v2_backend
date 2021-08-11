@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Set;
 
-import static com.allen.moments.v2.utils.error_handler.DBExceptionChecker.checkIfRowsAffectedIsOne;
+import static com.allen.moments.v2.utils.errorHandler.DBExceptionChecker.checkIfRowsAffectedIsOne;
 
 
 /**
@@ -64,7 +64,7 @@ public class UserService {
     }
 
     public @Nullable
-    User getUser(@NotNull int uid) {
+    User getUser(int uid) {
             User cachedUser = (User) redis.hashGet("allUsers", String.valueOf(uid));
             if (cachedUser != null) {
                 return cachedUser;
@@ -80,13 +80,13 @@ public class UserService {
     public List<User> selectUsersOrderByFollowerCounts(int start, int limit) {
         try {
             if (start < 100) { // to avoid having big key in redis, only writes the first 100 popular posts into redis
-                List<User> usersCached = (List<User>) (Object) redis.listGet("usersWithHighestFollowerCounts", start, limit);
+                List<User> usersCached = redis.listGet("usersWithHighestFollowerCounts", start, limit);
                 if (usersCached != null) {
                     return usersCached;
                 }
             }
             List<User>  usersInDB = userDao.selectUsersOrderByFollowerCounts(start, limit);
-            redis.listMSetWithExpiration("postsWithHighestLikeCounts", (List<Object>) (Object) usersInDB.subList(0, Math.min(limit, 100)), 20);
+            redis.listMSetWithExpiration("postsWithHighestLikeCounts", usersInDB.subList(0, Math.min(limit, 100)), 20);
             return usersInDB;
         }
         catch (ClassCastException castException) {
@@ -96,11 +96,11 @@ public class UserService {
 
     public Set<Integer> getFollowersId(int uid) {
             String redisKey = "user:" + uid + ":follower";
-            Set<Integer> followersCached = (Set<Integer>) (Object) redis.setGetAll(redisKey);
+            Set<Integer> followersCached = redis.setGetAll(redisKey);
             if (followersCached != null) {
                 return followersCached;
             }
-            Set<Integer> followersInDB = (Set<Integer>) userDao.selectFollowersById(uid);
+            Set<Integer> followersInDB = userDao.selectFollowersById(uid);
             if (followersInDB != null) {
                 ThreadPoolManager.getInstance().execute(new Runnable() {
                     @Override
@@ -116,7 +116,7 @@ public class UserService {
 
     public Set<Integer> getFollowingsId(int uid) {
             String redisKey = "user:" + uid + ":following";
-            Set<Integer> followingsCached = (Set<Integer>) (Object) redis.setGetAll(redisKey);
+            Set<Integer> followingsCached = redis.setGetAll(redisKey);
             if (followingsCached != null && followingsCached.size() > 0) {
                 return followingsCached;
             }

@@ -1,4 +1,4 @@
-package com.allen.moments.v2.utils.error_handler;
+package com.allen.moments.v2.utils.errorHandler;
 
 import com.allen.moments.v2.model.DML;
 import com.allen.moments.v2.model.ErrorType;

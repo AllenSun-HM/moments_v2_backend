@@ -6,13 +6,12 @@ import com.allen.moments.v2.model.Post;
 import com.allen.moments.v2.redis.RedisUtil;
 import com.allen.moments.v2.utils.ThreadPoolManager;
 import org.apache.logging.log4j.LogManager;
-import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
-import static com.allen.moments.v2.utils.error_handler.DBExceptionChecker.checkIfRowsAffectedIsOne;
+import static com.allen.moments.v2.utils.errorHandler.DBExceptionChecker.checkIfRowsAffectedIsOne;
 
 @Service
 public class PostService {
@@ -50,19 +49,15 @@ public class PostService {
         Post post = new Post(postId, text, uid, photoUrls);
         int rowsAffected = postDao.insertSelective(post);
         checkIfRowsAffectedIsOne(rowsAffected, DML.INSERT);
-        ThreadPoolManager.getInstance().execute(new Runnable() {  // user another thread to execute redis update in order to avoid waiting for redis execution in the main thread
-            @Override
-            public void run() {
-                redis.set("post:" + postId, post);
-            }
-        });
+        // user another thread to execute redis update in order to avoid waiting for redis execution in the main thread
+        ThreadPoolManager.getInstance().execute(() -> redis.set("post:" + postId, post));
         return postId;
     }
 
 
     public Post getPost(int postId) {
 //            redis.get("post:comment:" + postId);
-            Post post = (Post) redis.get("post:" + (postId));
+            Post post = redis.get("post:" + (postId));
             if (post != null) {
                 return post;
             }
@@ -78,13 +73,13 @@ public class PostService {
     public List<Post> getPostsWithHighestLikeCounts(int start, int limit) {
         try {
             if (start < 100) { // to avoid having big key in redis, only writes the first 100 popular posts into redis
-                List<Post> posts = (List<Post>) (Object) redis.listGet("postsWithHighestLikeCounts", start, limit);
+                List<Post> posts = redis.listGet("postsWithHighestLikeCounts", start, limit);
                 if (posts != null && posts.size() > 0) {
                     return posts;
                 }
             }
             List<Post> postsInDB = postDao.getPostsWithHighestLikeCounts(start, limit);
-            redis.listMSetWithExpiration("postsWithHighestLikeCounts", (List<Object>) (Object) postsInDB.subList(0, Math.min(limit, 100)), 20);
+            redis.listMSetWithExpiration("postsWithHighestLikeCounts", postsInDB.subList(0, Math.min(limit, 100)), 20);
             return postsInDB;
         }
         catch (ClassCastException castException) {

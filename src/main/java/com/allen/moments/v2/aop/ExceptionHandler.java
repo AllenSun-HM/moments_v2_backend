@@ -12,10 +12,13 @@ public class ExceptionHandler {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    /*
+    when exception occurs, print error message
+     */
     @AfterThrowing(pointcut = "execution(public * com.allen.moments.v2.api.*.*(..))", throwing="e")
     public JsonResult<?> doAfterThrowing(JoinPoint joinPoint, Throwable e) {
         try {
-            logger.error("------->Error Class:" + e.getClass().getName());
+            logger.error("------->Error class:" + e.getClass().getName());
             logger.error("------->Error msg:" + e.getMessage());
             logger.error("------->Error method:" + (joinPoint.getTarget().getClass().getName() + "." + joinPoint.getSignature().getName() + "()"));
             Object[] arguments = joinPoint.getArgs();
@@ -24,13 +27,12 @@ public class ExceptionHandler {
                     logger.error("------->args[" + i + "]: " +  JSONObject.toJSONString(arguments[i]));
                 }
             }
-            if (e.getClass() == ApplicationException.class) { // customized exception with err_no and message
+            if (e.getClass() == ApplicationException.class) { // handle customized ApplicationException
                 return JsonResult.failure(((ApplicationException) e).getErrNo(), e.getMessage());
             }
             return JsonResult.unknownFailure();
         }  catch (Exception ex) {
-            logger.error("------->exception occured!");
-            logger.error("------->exception message:{}", ex.getMessage());
+            logger.error("------->Exception occurred! Exception message:{}", ex.getMessage());
             return JsonResult.unknownFailure();
         }
 

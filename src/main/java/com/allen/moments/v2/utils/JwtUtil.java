@@ -9,9 +9,8 @@ import java.util.*;
 
 @Component
 public class JwtUtil {
-    private static Logger log = LoggerFactory.getLogger(JwtUtil.class);
     private static final long aWeekInMs = 604800000;
-    public String getToken(Integer uid) {
+    public String getToken(int uid) {
         String token = "";
         token = com.auth0.jwt.JWT.create().withAudience(String.valueOf(uid)).withExpiresAt(new Date(System.currentTimeMillis() + aWeekInMs))
                 .sign(Algorithm.HMAC256("${application.jwt.secret_key}"));

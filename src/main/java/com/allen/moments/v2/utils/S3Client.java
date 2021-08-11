@@ -7,6 +7,8 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +17,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Date;
+import java.util.Objects;
+import java.util.UUID;
 
 @Configuration
 public class S3Client {
@@ -28,6 +32,8 @@ public class S3Client {
 
     @Value("${aws.s3.region}")
     private String region;
+
+    private Logger logger = LogManager.getLogger(this.getClass());
 
     @Bean(name = "client")
     public AmazonS3 s3Client() {
@@ -53,7 +59,9 @@ public class S3Client {
         File file = convertMultiPartToFile(multipartFile);
         fileUrl = endpointUrl + "/" + bucketName + "/" + fileName;
         uploadFileToS3Bucket(fileName, file);
-        file.delete();
+        if (!file.delete()) {
+            logger.warn("File " + fileName + " deletion failed");
+        }
         return fileUrl;
     }
 
@@ -74,7 +82,7 @@ public class S3Client {
 
     private File convertMultiPartToFile(MultipartFile file)
             throws IOException {
-        File convFile = new File(file.getOriginalFilename());
+        File convFile = new File(String.valueOf(UUID.randomUUID()) + System.currentTimeMillis());
         FileOutputStream fos = new FileOutputStream(convFile);
         fos.write(file.getBytes());
         fos.close();
@@ -82,7 +90,7 @@ public class S3Client {
     }
 
     private String generateFileName(MultipartFile multiPart) {
-        return new Date().getTime() + "-" +   multiPart.getOriginalFilename().replace(" ", "_");
+        return new Date().getTime() + "-" +   Objects.requireNonNull(multiPart.getOriginalFilename()).replace(" ", "_");
     }
 
 }

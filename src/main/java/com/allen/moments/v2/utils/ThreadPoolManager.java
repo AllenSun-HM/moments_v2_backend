@@ -10,7 +10,6 @@ import java.util.concurrent.TimeUnit;
 
 public class ThreadPoolManager<T> {
 
-
     private static final int CPU_CORE_COUNT         = Runtime.getRuntime().availableProcessors();
 
     private static final int CORE_POOL_SIZE    = CPU_CORE_COUNT + 1;

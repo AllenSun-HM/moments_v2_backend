@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.*;
 import org.apache.ibatis.type.JdbcType;
 
 import java.util.List;
+import java.util.Set;
 
 @Mapper
 public interface UserDao {
@@ -146,7 +147,7 @@ public interface UserDao {
                     "FROM follow_relations",
                     "WHERE followed_id = #{uid, jdbcType=INTEGER}"
     })
-    List<Integer> selectFollowersById(int uid);
+    Set<Integer> selectFollowersById(int uid);
 
     @Select({
                     "SELECT",
@@ -154,7 +155,7 @@ public interface UserDao {
                     "FROM follow_relations",
                     "WHERE follower_id = #{uid, jdbcType=INTEGER}"
     })
-    List<Integer> selectFollowingsById(int uid);
+    Set<Integer> selectFollowingsById(int uid);
 
     @Delete({
                     "DELETE FROM follow_relations",

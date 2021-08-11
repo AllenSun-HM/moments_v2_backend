@@ -1,5 +1,6 @@
 package com.allen.moments.v2.redis;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
@@ -9,9 +10,10 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Component
-public final class RedisUtil {
+public class RedisUtil  {
 
     @Autowired
+    @Qualifier("redisTemplate")
     private RedisTemplate<String, Object> redisTemplate;
 
     // =============================Common============================
@@ -34,17 +36,16 @@ public final class RedisUtil {
 
     /**
      * get expiration time of a key
-     *
      * @param key not null
      * @return expiration time in seconds
      */
-    public long getExpire(String key) {
+    public Long getExpire(String key) {
         return redisTemplate.getExpire(key, TimeUnit.SECONDS);
     }
 
+
     /**
      * check if a key exists
-     *
      * @return true if exists, false otherwise;
      */
     public Boolean hasKey(String key) {
@@ -58,9 +59,7 @@ public final class RedisUtil {
 
     /**
      * delete key
-     *
      * @param key could be one or multiple keys
-     *            whether operation is success or not
      */
     @SuppressWarnings("unchecked")
     public void deleteKey(String... key) {
@@ -77,15 +76,22 @@ public final class RedisUtil {
 
     /**
      * get value
-     *
      * @return value
      */
-    public Object get(String key) {
-        return key == null ? null : redisTemplate.opsForValue().get(key);
+    public <T> T get(String key) {
+        if (key == null) {
+            return null;
+        }
+        try {
+            return (T) redisTemplate.opsForValue().get(key);
+        }
+        catch (RuntimeException exception) {
+            return null;
+        }
     }
 
 
-    public boolean set(String key, Object value) {
+    public boolean set(String key, com.allen.moments.v2.model.Post value) {
         try {
             redisTemplate.opsForValue().set(key, value);
             return true;
@@ -97,11 +103,10 @@ public final class RedisUtil {
 
     /**
      * set key and value with expiration time
-     *
      * @param time expiration time in seconds, -1 for no expiration
      * @return true if success false otherwise
      */
-    public boolean set(String key, Object value, long time) {
+    public boolean set(String key, com.allen.moments.v2.model.Post value, long time) {
         try {
             if (time > 0) {
                 redisTemplate.opsForValue().set(key, value, time, TimeUnit.SECONDS);
@@ -117,7 +122,6 @@ public final class RedisUtil {
 
     /**
      * increase a key's value by certain number
-     *
      * @param delta the number to add to the key's value
      */
     public Long incr(String key, long delta) {
@@ -184,7 +188,7 @@ public final class RedisUtil {
     }
 
 
-    public boolean hashSet(String key, String item, Object value) {
+    public boolean hashSet(String key, String item, com.allen.moments.v2.model.User value) {
         try {
             redisTemplate.opsForHash().put(key, item, value);
             return true;
@@ -233,10 +237,9 @@ public final class RedisUtil {
 
     // ============================set=============================
 
-
-    public Set<Object> setGetAll(String key) {
+    public <T> Set<T> setGetAll(String key) {
         try {
-            return redisTemplate.opsForSet().members(key);
+            return (Set<T>) (Object) redisTemplate.opsForSet().members(key);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -309,9 +312,14 @@ public final class RedisUtil {
     // ===============================list=================================
 
 
-    public List<Object> listGet(String key, long start, long end) {
+    public <T> List<T> listGet(String key, long start, long end) {
         try {
-            return redisTemplate.opsForList().range(key, start, end);
+            List<T> list;
+            list = (List<T>) (Object) redisTemplate.opsForList().range(key, start, end);
+            if (list == null) {
+                return new ArrayList<T>();
+            }
+            return list;
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -375,7 +383,7 @@ public final class RedisUtil {
     }
 
 
-    public boolean listMSetWithExpiration(String key, List<Object> value, long time) {
+    public <T> boolean listMSetWithExpiration(String key, List<T> value, long time) {
         try {
             redisTemplate.opsForList().rightPushAll(key, value);
             if (time > 0) {
